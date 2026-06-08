@@ -95,6 +95,7 @@ padding:8px;
 <th>NIK</th>
 <th>Shift</th>
 <th>Status</th>
+<th>Waktu</th>
 </tr>
 </thead>
 
@@ -162,7 +163,7 @@ async function loadData(){
 const { data, error } = await supabaseClient
   .from('presensi')
   .select('*')
-.order('created at', { ascending: false });
+.order('createdAt', { ascending: false });
 
   if(error){
     console.error(error);
@@ -174,16 +175,17 @@ const { data, error } = await supabaseClient
   const tbody = document.getElementById('dataPresensi');
   tbody.innerHTML = "";
 
-  data.forEach(item => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${item.nama}</td>
-        <td>${item.nik}</td>
-        <td>${item.shift}</td>
-        <td>${item.status}</td>
-      </tr>
-    `;
-  });
+data.forEach(item => {
+  tbody.innerHTML += `
+    <tr>
+      <td>${item.nama}</td>
+      <td>${item.nik}</td>
+      <td>${item.shift}</td>
+      <td>${item.status}</td>
+      <td>${new Date(item.createdAt).toLocaleString()}</td>
+    </tr>
+  `;
+});
 
 }
 
