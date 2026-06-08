@@ -1,10 +1,199 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard Presensi</title>
+<meta charset="utf-8">
+<title>Presensi Karyawan</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+font-family:Arial;
+background:#f5f5f5;
+padding:20px;
+}
+
+.container{
+max-width:800px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin-bottom:10px;
+}
+
+button{
+padding:10px 20px;
+cursor:pointer;
+}
+
+table{
+width:100%;
+margin-top:20px;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+}
+</style>
+
 </head>
+
 <body>
-    <h1>Dashboard Presensi Bojonegoro</h1>
-    <p>Dashboard berhasil online.</p>
+
+<div class="container">
+
+<h2>Presensi Karyawan</h2>
+
+<input id="nama" placeholder="Nama">
+
+<input id="nik" placeholder="NIK">
+
+<select id="shift">
+<option>Shift 1</option>
+<option>Shift 2</option>
+<option>Shift 3</option>
+</select>
+
+<select id="departemen">
+<option>Produksi</option>
+<option>QC</option>
+<option>MTC</option>
+<option>Utility</option>
+</select>
+
+<select id="gedung">
+<option>Gedung 4</option>
+<option>Gedung 6</option>
+<option>Gedung 7</option>
+</select>
+
+<select id="status">
+<option>Hadir</option>
+<option>Izin</option>
+<option>Alpha</option>
+</select>
+
+<input id="keterangan" placeholder="Keterangan">
+
+<button onclick="simpan()">Simpan</button>
+
+<h3>Data Presensi</h3>
+
+<table>
+
+<thead>
+<tr>
+<th>Nama</th>
+<th>NIK</th>
+<th>Shift</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="dataPresensi"></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+const supabaseUrl =
+'https://qasbqrteajokqhapjutf.supabase.co';
+
+const supabaseKey =
+'PASTE_PUBLISHABLE_KEY_DISINI';
+
+const supabase =
+window.supabase.createClient(
+supabaseUrl,
+supabaseKey
+);
+
+async function simpan(){
+
+const data = {
+
+nama:
+document.getElementById('nama').value,
+
+nik:
+document.getElementById('nik').value,
+
+shift:
+document.getElementById('shift').value,
+
+departemen:
+document.getElementById('departemen').value,
+
+gedung:
+document.getElementById('gedung').value,
+
+status:
+document.getElementById('status').value,
+
+keterangan:
+document.getElementById('keterangan').value
+
+};
+
+const { error } =
+await supabase
+.from('presensi')
+.insert([data]);
+
+if(error){
+
+alert(error.message);
+
+}else{
+
+alert("Data berhasil disimpan");
+
+loadData();
+
+}
+
+}
+
+async function loadData(){
+
+const { data } =
+await supabase
+.from('presensi')
+.select('*')
+.order('id',{ascending:false});
+
+let html='';
+
+data.forEach(row=>{
+
+html += `
+<tr>
+<td>${row.nama}</td>
+<td>${row.nik}</td>
+<td>${row.shift}</td>
+<td>${row.status}</td>
+</tr>
+`;
+
+});
+
+document.getElementById('dataPresensi').innerHTML = html;
+
+}
+
+loadData();
+
+</script>
+
 </body>
 </html>
