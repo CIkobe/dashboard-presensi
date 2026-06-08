@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <title>Presensi Karyawan</title>
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -42,6 +44,34 @@ th,td{
 border:1px solid #ddd;
 padding:8px;
 }
+
+  @media (max-width: 600px) {
+
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    padding: 12px;
+  }
+
+  input, select, button {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  th, td {
+    font-size: 14px;
+  }
+
+}
+  
 </style>
 
 </head>
