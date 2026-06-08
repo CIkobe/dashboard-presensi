@@ -180,26 +180,22 @@ th,td {
 
 </div>
 
-<script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-const supabaseUrl =
-'https://qasbqrteajokqhapjutf.supabase.co';
+const supabaseUrl = 'https://qasbqrteajokqhapjutf.supabase.co';
+const supabaseKey = 'sb_publishable_xVuvGAJxAB7lb7AUZ-Szrw_EOQY8e5j';
 
-const supabaseKey =
-'sb_publishable_xVuvGAJxAB7lb7AUZ-Szrw_EOQY8e5j';
-
-const { createClient } = supabase;
-
-const supabaseClient = createClient(
-  supabaseUrl,
-  supabaseKey
-);
+const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
 let selectedDept = [];
 
-document.addEventListener('DOMContentLoaded', () => {
+/* klik departemen */
+window.addEventListener('load', () => {
+
   document.querySelectorAll('.dept-item').forEach(item => {
     item.addEventListener('click', () => {
+
       const value = item.dataset.value;
 
       if (selectedDept.includes(value)) {
@@ -209,20 +205,19 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedDept.push(value);
         item.classList.add('active');
       }
+
     });
   });
-});
-  
-  console.log("Supabase client:", supabaseClient);
-  
-async function simpan(){
 
-  if(!document.getElementById('nama').value || !document.getElementById('nik').value){
+});
+/* SIMPAN */
+window.simpan = async function () {
+
+  if (!document.getElementById('nama').value ||
+      !document.getElementById('nik').value) {
     alert("Nama dan NIK wajib diisi!");
     return;
   }
-
-  // ✅ AMBIL DEPARTEMEN DI LUAR OBJECT
 
   const data = {
     nama: document.getElementById('nama').value,
@@ -237,57 +232,54 @@ async function simpan(){
     .from('presensi')
     .insert([data]);
 
-  if(error){
+  if (error) {
     alert(error.message);
-  } else {
-    alert("Data berhasil disimpan");
-
-    document.getElementById('nama').value = "";
-    document.getElementById('nik').value = "";
-    document.getElementById('jabatan').value = "";
-    document.getElementById('keterangan').value = "";
-
-    document.querySelectorAll('.dept-item').forEach(el => {
-  el.classList.remove('active');
-});
-selectedDept = [];
-
-    loadData();
+    return;
   }
-}
-  
-async function loadData(){
 
-const { data, error } = await supabaseClient
-  .from('presensi')
-  .select('*')
-.order('createdAt', { ascending: false });
+  alert("Data berhasil disimpan");
 
-  if(error){
+  document.getElementById('nama').value = "";
+  document.getElementById('nik').value = "";
+  document.getElementById('jabatan').value = "";
+  document.getElementById('keterangan').value = "";
+
+  selectedDept = [];
+  document.querySelectorAll('.dept-item').forEach(el => el.classList.remove('active'));
+
+  loadData();
+};
+
+/* LOAD DATA */
+async function loadData() {
+  const { data, error } = await supabaseClient
+    .from('presensi')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
     console.error(error);
     return;
   }
 
-  console.log(data);
-
   const tbody = document.getElementById('dataPresensi');
   tbody.innerHTML = "";
 
-data.forEach(item => {
-  tbody.innerHTML += `
-    <tr>
-      <td>${item.nama}</td>
-      <td>${item.nik}</td>
-      <td>${item.jabatan}</td>
-<td>${Array.isArray(item.departemen) ? item.departemen.join(', ') : item.departemen}</td>
-<td>${item.status}</td>
-<td>${new Date(item.createdAt).toLocaleString()}</td>
-    </tr>
-  `;
-});
-
+  data.forEach(item => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${item.nama}</td>
+        <td>${item.nik}</td>
+        <td>${item.jabatan}</td>
+        <td>${Array.isArray(item.departemen) ? item.departemen.join(', ') : item.departemen}</td>
+        <td>${item.status}</td>
+        <td>${item.created_at ? new Date(item.created_at).toLocaleString() : '-'}</td>
+      </tr>
+    `;
+  });
 }
 
+/* AUTO LOAD */
 loadData();
 
 </script>
