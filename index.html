@@ -98,18 +98,27 @@ th,td {
 
 <input id="nik" placeholder="NIK">
 
+  <input id="jabatan" placeholder="Jabatan">
+
 <select id="shift">
 <option>Shift 1</option>
 <option>Shift 2</option>
 <option>Shift 3</option>
 </select>
 
-<select id="departemen">
-<option>Produksi</option>
-<option>QC</option>
-<option>MTC</option>
-<option>Utility</option>
-</select>
+<h4>Departemen</h4>
+
+<label><input type="checkbox" value="Manex" class="dept"> Manex</label><br>
+<label><input type="checkbox" value="Produksi" class="dept"> Produksi</label><br>
+<label><input type="checkbox" value="Maintenance" class="dept"> Maintenance</label><br>
+<label><input type="checkbox" value="Sparepart" class="dept"> Sparepart</label><br>
+<label><input type="checkbox" value="Utility" class="dept"> Utility</label><br>
+<label><input type="checkbox" value="Warehouse" class="dept"> Warehouse</label><br>
+<label><input type="checkbox" value="RMPM" class="dept"> RMPM</label><br>
+<label><input type="checkbox" value="QC" class="dept"> QC</label><br>
+<label><input type="checkbox" value="GA" class="dept"> GA</label><br>
+<label><input type="checkbox" value="HC" class="dept"> HC</label><br>
+<label><input type="checkbox" value="Project" class="dept"> Project</label><br>
 
 <select id="gedung">
 <option>Gedung 4</option>
@@ -118,9 +127,9 @@ th,td {
 </select>
 
 <select id="status">
-<option>Hadir</option>
-<option>Izin</option>
-<option>Alpha</option>
+  <option value="Hadir">Hadir</option>
+  <option value="Izin">Izin</option>
+  <option value="Alpha">Alpha</option>
 </select>
 
 <input id="keterangan" placeholder="Keterangan">
@@ -135,6 +144,8 @@ th,td {
 <tr>
 <th>Nama</th>
 <th>NIK</th>
+<th>Jabatan</th>
+<th>Departemen</th>
 <th>Shift</th>
 <th>Status</th>
 <th>Waktu</th>
@@ -166,17 +177,21 @@ const supabaseClient = createClient(
   
 async function simpan(){
 
-  // 🔥 VALIDASI TARUH DI SINI (PALING ATAS)
   if(!document.getElementById('nama').value || !document.getElementById('nik').value){
     alert("Nama dan NIK wajib diisi!");
     return;
   }
 
+  // ✅ AMBIL DEPARTEMEN DI LUAR OBJECT
+  const deptChecked = document.querySelectorAll('.dept:checked');
+  const departemen = Array.from(deptChecked).map(el => el.value);
+
   const data = {
     nama: document.getElementById('nama').value,
     nik: document.getElementById('nik').value,
+    jabatan: document.getElementById('jabatan').value,
     shift: document.getElementById('shift').value,
-    departemen: document.getElementById('departemen').value,
+    departemen: departemen,
     gedung: document.getElementById('gedung').value,
     status: document.getElementById('status').value,
     keterangan: document.getElementById('keterangan').value
@@ -188,18 +203,20 @@ async function simpan(){
 
   if(error){
     alert(error.message);
-  }else{
-
+  } else {
     alert("Data berhasil disimpan");
 
     document.getElementById('nama').value = "";
     document.getElementById('nik').value = "";
+    document.getElementById('jabatan').value = "";
     document.getElementById('keterangan').value = "";
+
+    document.querySelectorAll('.dept').forEach(el => el.checked = false);
 
     loadData();
   }
 }
-
+  
 async function loadData(){
 
 const { data, error } = await supabaseClient
@@ -222,9 +239,11 @@ data.forEach(item => {
     <tr>
       <td>${item.nama}</td>
       <td>${item.nik}</td>
-      <td>${item.shift}</td>
-      <td>${item.status}</td>
-      <td>${new Date(item.createdAt).toLocaleString()}</td>
+      <td>${item.jabatan}</td>
+<td>${Array.isArray(item.departemen) ? item.departemen.join(', ') : item.departemen}</td>
+<td>${item.shift}</td>
+<td>${item.status}</td>
+<td>${new Date(item.createdAt).toLocaleString()}</td>
     </tr>
   `;
 });
