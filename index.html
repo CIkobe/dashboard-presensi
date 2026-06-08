@@ -177,25 +177,6 @@ console.log(result);
 
 }
 
-let html='';
-
-data.forEach(row=>{
-
-html += `
-<tr>
-<td>${row.nama}</td>
-<td>${row.nik}</td>
-<td>${row.shift}</td>
-<td>${row.status}</td>
-</tr>
-`;
-
-});
-
-document.getElementById('dataPresensi').innerHTML = html;
-
-}
-
 loadData();
 
 </script>
