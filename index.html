@@ -9,10 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-* {
-  box-sizing: border-box;
-}
-
+  
 body {
   margin: 0;
   font-family: Arial;
@@ -56,34 +53,36 @@ th,td {
   padding:8px;
 }
 
-/* MOBILE FIX */
-@media (max-width: 600px) {
+/* ===== DEPARTEMEN GRID ===== */
 
-  body {
-    padding: 10px;
-  }
-
-  .container {
-    padding: 12px;
-  }
-
-  input, select, button {
-    font-size: 16px;
-    padding: 12px;
-  }
-
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  th, td {
-    font-size: 14px;
-  }
-
+.dept-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 15px;
 }
-  
+
+.dept-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f2f2f2;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .dept-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dept-item {
+    font-size: 13px;
+    padding: 12px;
+  }
+}
 </style>
 
 </head>
@@ -108,17 +107,21 @@ th,td {
 
 <h4>Departemen</h4>
 
-<label><input type="checkbox" value="Manex" class="dept"> Manex</label><br>
-<label><input type="checkbox" value="Produksi" class="dept"> Produksi</label><br>
-<label><input type="checkbox" value="Maintenance" class="dept"> Maintenance</label><br>
-<label><input type="checkbox" value="Sparepart" class="dept"> Sparepart</label><br>
-<label><input type="checkbox" value="Utility" class="dept"> Utility</label><br>
-<label><input type="checkbox" value="Warehouse" class="dept"> Warehouse</label><br>
-<label><input type="checkbox" value="RMPM" class="dept"> RMPM</label><br>
-<label><input type="checkbox" value="QC" class="dept"> QC</label><br>
-<label><input type="checkbox" value="GA" class="dept"> GA</label><br>
-<label><input type="checkbox" value="HC" class="dept"> HC</label><br>
-<label><input type="checkbox" value="Project" class="dept"> Project</label><br>
+<div class="dept-grid">
+
+  <label class="dept-item"><input type="checkbox" value="Manex" class="dept"> Manex</label>
+  <label class="dept-item"><input type="checkbox" value="Produksi" class="dept"> Produksi</label>
+  <label class="dept-item"><input type="checkbox" value="Maintenance" class="dept"> Maintenance</label>
+  <label class="dept-item"><input type="checkbox" value="Sparepart" class="dept"> Sparepart</label>
+  <label class="dept-item"><input type="checkbox" value="Utility" class="dept"> Utility</label>
+  <label class="dept-item"><input type="checkbox" value="Warehouse" class="dept"> Warehouse</label>
+  <label class="dept-item"><input type="checkbox" value="RMPM" class="dept"> RMPM</label>
+  <label class="dept-item"><input type="checkbox" value="QC" class="dept"> QC</label>
+  <label class="dept-item"><input type="checkbox" value="GA" class="dept"> GA</label>
+  <label class="dept-item"><input type="checkbox" value="HC" class="dept"> HC</label>
+  <label class="dept-item"><input type="checkbox" value="Project" class="dept"> Project</label>
+
+</div>
 
 <select id="gedung">
 <option>Gedung 4</option>
