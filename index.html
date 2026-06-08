@@ -123,57 +123,67 @@ const supabaseClient = createClient(
   
 async function simpan(){
 
-const data = {
+  // 🔥 VALIDASI TARUH DI SINI (PALING ATAS)
+  if(!document.getElementById('nama').value || !document.getElementById('nik').value){
+    alert("Nama dan NIK wajib diisi!");
+    return;
+  }
 
-nama:
-document.getElementById('nama').value,
+  const data = {
+    nama: document.getElementById('nama').value,
+    nik: document.getElementById('nik').value,
+    shift: document.getElementById('shift').value,
+    departemen: document.getElementById('departemen').value,
+    gedung: document.getElementById('gedung').value,
+    status: document.getElementById('status').value,
+    keterangan: document.getElementById('keterangan').value
+  };
 
-nik:
-document.getElementById('nik').value,
+  const { error } = await supabaseClient
+    .from('presensi')
+    .insert([data]);
 
-shift:
-document.getElementById('shift').value,
+  if(error){
+    alert(error.message);
+  }else{
 
-departemen:
-document.getElementById('departemen').value,
+    alert("Data berhasil disimpan");
 
-gedung:
-document.getElementById('gedung').value,
+    document.getElementById('nama').value = "";
+    document.getElementById('nik').value = "";
+    document.getElementById('keterangan').value = "";
 
-status:
-document.getElementById('status').value,
-
-keterangan:
-document.getElementById('keterangan').value
-
-};
-
-const { error } =
-await supabaseClient
-.from('presensi')
-.insert([data]);
-
-if(error){
-
-alert(error.message);
-
-}else{
-
-alert("Data berhasil disimpan");
-
-loadData();
-
-}
-
+    loadData();
+  }
 }
 
 async function loadData(){
 
-const result = await supabaseClient
-.from('presensi')
-.select('*');
+const { data, error } = await supabaseClient
+  .from('presensi')
+  .select('*')
+.order('created at', { ascending: false });
 
-console.log(result);
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  console.log(data);
+
+  const tbody = document.getElementById('dataPresensi');
+  tbody.innerHTML = "";
+
+  data.forEach(item => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${item.nama}</td>
+        <td>${item.nik}</td>
+        <td>${item.shift}</td>
+        <td>${item.status}</td>
+      </tr>
+    `;
+  });
 
 }
 
