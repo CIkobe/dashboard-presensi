@@ -110,12 +110,13 @@ const supabaseUrl =
 'https://qasbqrteajokqhapjutf.supabase.co';
 
 const supabaseKey =
-sb_publishable_xVuvGAJxAB7lb7AUZ-Szrw_EOQY8e5j
+'sb_publishable_xVuvGAJxAB7lb7AUZ-Szrw_EOQY8e5j';
 
-const supabase =
-window.supabase.createClient(
-supabaseUrl,
-supabaseKey
+const { createClient } = supabase;
+
+const supabaseClient = createClient(
+  supabaseUrl,
+  supabaseKey
 );
 
 async function simpan(){
@@ -146,7 +147,7 @@ document.getElementById('keterangan').value
 };
 
 const { error } =
-await supabase
+await supabaseClient
 .from('presensi')
 .insert([data]);
 
@@ -166,11 +167,17 @@ loadData();
 
 async function loadData(){
 
-const { data } =
-await supabase
+const { data, error } =
+await supabaseClient
 .from('presensi')
 .select('*')
 .order('id',{ascending:false});
+
+if(error){
+  console.error(error);
+  alert(error.message);
+  return;
+}
 
 let html='';
 
