@@ -122,12 +122,6 @@ th,td {
 
 </div>
 
-<select id="gedung">
-<option>Gedung 4</option>
-<option>Gedung 6</option>
-<option>Gedung 7</option>
-</select>
-
 <select id="status">
   <option value="Hadir">Hadir</option>
   <option value="Izin">Izin</option>
@@ -208,7 +202,6 @@ async function simpan(){
     nik: document.getElementById('nik').value,
     jabatan: document.getElementById('jabatan').value,
     departemen: selectedDept,
-    gedung: document.getElementById('gedung').value,
     status: document.getElementById('status').value,
     keterangan: document.getElementById('keterangan').value
   };
