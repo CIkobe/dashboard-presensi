@@ -104,12 +104,6 @@ th,td {
 
   <input id="jabatan" placeholder="Jabatan">
 
-<select id="shift">
-<option>Shift 1</option>
-<option>Shift 2</option>
-<option>Shift 3</option>
-</select>
-
 <h4>Departemen</h4>
 
 <div class="dept-grid">
@@ -154,7 +148,6 @@ th,td {
 <th>NIK</th>
 <th>Jabatan</th>
 <th>Departemen</th>
-<th>Shift</th>
 <th>Status</th>
 <th>Waktu</th>
 </tr>
@@ -214,7 +207,6 @@ async function simpan(){
     nama: document.getElementById('nama').value,
     nik: document.getElementById('nik').value,
     jabatan: document.getElementById('jabatan').value,
-    shift: document.getElementById('shift').value,
     departemen: selectedDept,
     gedung: document.getElementById('gedung').value,
     status: document.getElementById('status').value,
@@ -268,7 +260,6 @@ data.forEach(item => {
       <td>${item.nik}</td>
       <td>${item.jabatan}</td>
 <td>${Array.isArray(item.departemen) ? item.departemen.join(', ') : item.departemen}</td>
-<td>${item.shift}</td>
 <td>${item.status}</td>
 <td>${new Date(item.createdAt).toLocaleString()}</td>
     </tr>
