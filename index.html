@@ -119,6 +119,8 @@ const supabaseClient = createClient(
   supabaseKey
 );
 
+  console.log("Supabase client:", supabaseClient);
+  
 async function simpan(){
 
 const data = {
@@ -167,16 +169,12 @@ loadData();
 
 async function loadData(){
 
-const { data, error } =
-await supabaseClient
+const result = await supabaseClient
 .from('presensi')
-.select('*')
-.order('id',{ascending:false});
+.select('*');
 
-if(error){
-  console.error(error);
-  alert(error.message);
-  return;
+console.log(result);
+
 }
 
 let html='';
