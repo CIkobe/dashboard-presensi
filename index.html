@@ -73,6 +73,11 @@ th,td {
   cursor: pointer;
 }
 
+  .dept-item.active {
+  background: #007bff;
+  color: white;
+}
+  
 @media (max-width: 600px) {
   .dept-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -109,17 +114,17 @@ th,td {
 
 <div class="dept-grid">
 
-  <label class="dept-item"><input type="checkbox" value="Manex" class="dept"> Manex</label>
-  <label class="dept-item"><input type="checkbox" value="Produksi" class="dept"> Produksi</label>
-  <label class="dept-item"><input type="checkbox" value="Maintenance" class="dept"> Maintenance</label>
-  <label class="dept-item"><input type="checkbox" value="Sparepart" class="dept"> Sparepart</label>
-  <label class="dept-item"><input type="checkbox" value="Utility" class="dept"> Utility</label>
-  <label class="dept-item"><input type="checkbox" value="Warehouse" class="dept"> Warehouse</label>
-  <label class="dept-item"><input type="checkbox" value="RMPM" class="dept"> RMPM</label>
-  <label class="dept-item"><input type="checkbox" value="QC" class="dept"> QC</label>
-  <label class="dept-item"><input type="checkbox" value="GA" class="dept"> GA</label>
-  <label class="dept-item"><input type="checkbox" value="HC" class="dept"> HC</label>
-  <label class="dept-item"><input type="checkbox" value="Project" class="dept"> Project</label>
+ <div class="dept-item" data-value="Manex">Manex</div>
+<div class="dept-item" data-value="Produksi">Produksi</div>
+<div class="dept-item" data-value="Maintenance">Maintenance</div>
+<div class="dept-item" data-value="Sparepart">Sparepart</div>
+<div class="dept-item" data-value="Utility">Utility</div>
+<div class="dept-item" data-value="Warehouse">Warehouse</div>
+<div class="dept-item" data-value="RMPM">RMPM</div>
+<div class="dept-item" data-value="QC">QC</div>
+<div class="dept-item" data-value="GA">GA</div>
+<div class="dept-item" data-value="HC">HC</div>
+<div class="dept-item" data-value="Project">Project</div>
 
 </div>
 
@@ -176,6 +181,24 @@ const supabaseClient = createClient(
   supabaseKey
 );
 
+let selectedDept = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.dept-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const value = item.dataset.value;
+
+      if (selectedDept.includes(value)) {
+        selectedDept = selectedDept.filter(v => v !== value);
+        item.classList.remove('active');
+      } else {
+        selectedDept.push(value);
+        item.classList.add('active');
+      }
+    });
+  });
+});
+  
   console.log("Supabase client:", supabaseClient);
   
 async function simpan(){
@@ -186,15 +209,13 @@ async function simpan(){
   }
 
   // ✅ AMBIL DEPARTEMEN DI LUAR OBJECT
-  const deptChecked = document.querySelectorAll('.dept:checked');
-  const departemen = Array.from(deptChecked).map(el => el.value);
 
   const data = {
     nama: document.getElementById('nama').value,
     nik: document.getElementById('nik').value,
     jabatan: document.getElementById('jabatan').value,
     shift: document.getElementById('shift').value,
-    departemen: departemen,
+    departemen: selectedDept,
     gedung: document.getElementById('gedung').value,
     status: document.getElementById('status').value,
     keterangan: document.getElementById('keterangan').value
@@ -214,7 +235,10 @@ async function simpan(){
     document.getElementById('jabatan').value = "";
     document.getElementById('keterangan').value = "";
 
-    document.querySelectorAll('.dept').forEach(el => el.checked = false);
+    document.querySelectorAll('.dept-item').forEach(el => {
+  el.classList.remove('active');
+});
+selectedDept = [];
 
     loadData();
   }
