@@ -196,28 +196,28 @@ const supabaseClient = createClient(supabaseUrl, supabaseKey);
   let chart; 
   let selectedDept = [];
 
-  function formatDept(dept) {
+function formatDept(dept) {
   if (!dept) return "-";
 
-  if (Array.isArray(dept)) {
-    return dept.join(' • ');
-  }
+  let arr = [];
 
-  if (typeof dept === "string") {
+  if (Array.isArray(dept)) {
+    arr = dept;
+  } 
+  else if (typeof dept === "string") {
     try {
       const parsed = JSON.parse(dept);
-      if (Array.isArray(parsed)) {
-        return parsed.join(' • ');
-      }
-      return dept;
+      if (Array.isArray(parsed)) arr = parsed;
+      else arr = [dept];
     } catch {
-      return dept.includes(",")
-        ? dept.split(",").map(x => x.trim()).join(' • ')
-        : dept;
+      arr = dept.split(",");
     }
   }
 
-  return dept;
+  return arr
+    .map(x => String(x).replace(/[\[\]"]/g, "").trim())
+    .filter(Boolean)
+    .join(" • ");
 }
   
 document.addEventListener('DOMContentLoaded', () => {
@@ -313,19 +313,38 @@ async function loadData() {
 /* AUTO LOAD */
 loadData();
 
-  function renderChart(data) {
+  function cleanDept(dept) {
+  if (!dept) return [];
+
+  if (Array.isArray(dept)) return dept;
+
+  if (typeof dept === "string") {
+    try {
+      const parsed = JSON.parse(dept);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {}
+
+    return dept
+      .split(",")
+      .map(x => x.replace(/[\[\]"]/g, "").trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function renderChart(data) {
   const deptCount = {};
 
   data.forEach(item => {
-   let dept = item.departemen || [];
+    const deptArray = cleanDept(item.departemen);
 
-    if (Array.isArray(dept)) {
-      dept.forEach(d => {
-        deptCount[d] = (deptCount[d] || 0) + 1;
-      });
-    } else if (dept) {
-      deptCount[dept] = (deptCount[dept] || 0) + 1;
-    }
+    deptArray.forEach(d => {
+      const clean = String(d).replace(/[\[\]"]/g, "").trim();
+      if (!clean) return;
+
+      deptCount[clean] = (deptCount[clean] || 0) + 1;
+    });
   });
 
   const labels = Object.keys(deptCount);
