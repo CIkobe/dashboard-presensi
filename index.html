@@ -521,7 +521,7 @@ if (!allData.length) {
     .from('setting')
     .select('saldo_kas')
     .eq('id', 1)
-    .single();
+    .maybeSingle();
 
   if(error){
     console.error(error);
@@ -552,7 +552,7 @@ const { data, error } = await supabaseClient
   .from('setting')
   .select('*')
   .eq('id', 1)
-  .single();
+  .maybeSingle();
 
 console.log('DATA SETTING:', data);
 console.log('ERROR:', error);
@@ -560,7 +560,7 @@ if (error || !data) {
   Swal.fire({
     icon: 'error',
     title: 'Data setting tidak ditemukan',
-    text: error?.message || 'Row id 5 kosong / RLS blok'
+    text: error?.message || 'Row id 1 kosong / RLS blok'
   });
   return;
 }
