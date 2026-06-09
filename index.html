@@ -520,7 +520,7 @@ if (!allData.length) {
   const { data, error } = await supabaseClient
     .from('setting')
     .select('saldo_kas')
-    .eq('id', 1)
+    .eq('id', 5)
     .single();
 
   if(error){
@@ -551,7 +551,7 @@ window.editKas = async function(){
   const { data } = await supabaseClient
     .from('setting')
     .select('saldo_kas')
-    .eq('id', 1)
+    .eq('id', 5)
     .single();
 
   const { value: nominal } = await Swal.fire({
@@ -567,7 +567,7 @@ window.editKas = async function(){
     .update({
       saldo_kas: Number(nominal)
     })
-    .eq('id', 1);
+    .eq('id', 5);
 
   if(error){
     Swal.fire({
