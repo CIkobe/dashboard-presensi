@@ -351,34 +351,18 @@ function renderChart(data) {
 
   if (chart) chart.destroy();
 
-chart = new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: labels,
-    datasets: [{
-      label: 'Jumlah Presensi',
-      data: values
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      x: {
-        ticks: {
-          maxRotation: 0,
-          minRotation: 0
-        }
-      },
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1
-        }
-      }
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Jumlah Presensi',
+        data: values
+      }]
     }
-  }
-});
-} 
+  });
+}
+
 window.exportExcel = function () {
   if (!allData.length) {
     alert("Data kosong!");
