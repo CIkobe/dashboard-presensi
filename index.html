@@ -548,11 +548,14 @@ window.editKas = async function(){
     return;
   }
 
-  const { data } = await supabaseClient
-    .from('setting')
-    .select('saldo_kas')
-    .eq('id', 5)
-    .single();
+const { data, error } = await supabaseClient
+  .from('setting')
+  .select('*')
+  .eq('id', 5)
+  .single();
+
+console.log('DATA SETTING:', data);
+console.log('ERROR:', error);
 
   const { value: nominal } = await Swal.fire({
     title: 'Edit Saldo Kas',
