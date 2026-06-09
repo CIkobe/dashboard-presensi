@@ -224,14 +224,14 @@ window.simpan = async function () {
     return;
   }
 
-  const data = {
-    nama: document.getElementById('nama').value,
-    nik: document.getElementById('nik').value,
-    jabatan: document.getElementById('jabatan').value,
-    departemen: selectedDept.length ? selectedDept : null,
-    status: document.getElementById('status').value,
-    keterangan: document.getElementById('keterangan').value
-  };
+const data = {
+  nama: document.getElementById('nama').value,
+  nik: document.getElementById('nik').value,
+  jabatan: document.getElementById('jabatan').value,
+  departemen: selectedDept,
+  status: document.getElementById('status').value,
+  keterangan: document.getElementById('keterangan').value
+};
 
   const { error } = await supabaseClient
     .from('presensi')
@@ -277,7 +277,7 @@ async function loadData() {
         <td>${item.nama}</td>
         <td>${item.nik}</td>
         <td>${item.jabatan}</td>
-        <td>${Array.isArray(item.departemen) ? item.departemen.join(', ') : item.departemen}</td>
+        <td>${Array.isArray(item.departemen) ? item.departemen.join(' • ') : item.departemen}</td>
         <td>${item.status}</td>
         <td>${item.created_at ? new Date(item.created_at).toLocaleString() : '-'}</td>
       </tr>
@@ -293,7 +293,7 @@ loadData();
   const deptCount = {};
 
   data.forEach(item => {
-    let dept = item.departemen;
+   let dept = item.departemen || [];
 
     if (Array.isArray(dept)) {
       dept.forEach(d => {
