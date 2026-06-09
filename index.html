@@ -226,7 +226,30 @@ border-radius:8px;
 margin-bottom:20px;">
 </div>
 
-  <button onclick="exportExcel()">Export Excel</button>
+<div id="kasCard" style="
+background:#fff3cd;
+padding:15px;
+border-radius:8px;
+margin-bottom:20px;
+border:1px solid #ffe69c;
+">
+
+  <h3>Saldo Kas Denda</h3>
+
+  <div id="saldoKas" style="
+  font-size:28px;
+  font-weight:bold;
+  color:#d35400;">
+    Rp 0
+  </div>
+
+  <button onclick="editKas()">
+    Edit Saldo
+  </button>
+
+</div>
+
+<button onclick="exportExcel()">Export Excel</button>
 
 <!-- 🔽 TAMBAHKAN INI DI BAWAHNYA -->
 <div class="table-wrapper">
@@ -381,9 +404,9 @@ renderChart(data);
 renderNama(data);
   
 }
-
 /* AUTO LOAD */
 loadData();
+loadSaldoKas();
 
 function renderChart(data) {
 
@@ -492,6 +515,76 @@ if (!allData.length) {
   XLSX.writeFile(wb, "data-presensi.xlsx");
 };
 
+  async function loadSaldoKas(){
+
+  const { data, error } = await supabaseClient
+    .from('setting')
+    .select('saldo_kas')
+    .eq('id', 1)
+    .single();
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  document.getElementById('saldoKas').innerText =
+    'Rp ' + Number(data.saldo_kas).toLocaleString('id-ID');
+}
+
+window.editKas = async function(){
+
+  const { value: password } = await Swal.fire({
+    title: 'Password Admin',
+    input: 'password',
+    inputPlaceholder: 'Masukkan password'
+  });
+
+  if(password !== 'Hudaganteng123'){
+    Swal.fire({
+      icon: 'error',
+      title: 'Password Salah'
+    });
+    return;
+  }
+
+  const { data } = await supabaseClient
+    .from('setting')
+    .select('saldo_kas')
+    .eq('id', 1)
+    .single();
+
+  const { value: nominal } = await Swal.fire({
+    title: 'Edit Saldo Kas',
+    input: 'number',
+    inputValue: data.saldo_kas
+  });
+
+  if(nominal === null) return;
+
+  const { error } = await supabaseClient
+    .from('setting')
+    .update({
+      saldo_kas: Number(nominal)
+    })
+    .eq('id', 1);
+
+  if(error){
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal Update',
+      text: error.message
+    });
+    return;
+  }
+
+  Swal.fire({
+    icon: 'success',
+    title: 'Saldo Berhasil Diubah'
+  });
+
+  loadSaldoKas();
+}
 /* 👇 TAMBAHKAN INI DI PALING BAWAH SCRIPT */
 function parseDept(dept) {
   if (!dept) return [];
