@@ -520,7 +520,7 @@ if (!allData.length) {
   const { data, error } = await supabaseClient
     .from('setting')
     .select('saldo_kas')
-    .eq('id', 5)
+    .eq('id', 1)
     .single();
 
   if(error){
@@ -551,16 +551,24 @@ window.editKas = async function(){
 const { data, error } = await supabaseClient
   .from('setting')
   .select('*')
-  .eq('id', 5)
+  .eq('id', 1)
   .single();
 
 console.log('DATA SETTING:', data);
 console.log('ERROR:', error);
-
+if (error || !data) {
+  Swal.fire({
+    icon: 'error',
+    title: 'Data setting tidak ditemukan',
+    text: error?.message || 'Row id 5 kosong / RLS blok'
+  });
+  return;
+}
+  
   const { value: nominal } = await Swal.fire({
     title: 'Edit Saldo Kas',
     input: 'number',
-    inputValue: data.saldo_kas
+    inputValue: data?.saldo_kas ?? 0
   });
 
   if(nominal === null) return;
@@ -570,7 +578,7 @@ console.log('ERROR:', error);
     .update({
       saldo_kas: Number(nominal)
     })
-    .eq('id', 5);
+    .eq('id', 1);
 
   if(error){
     Swal.fire({
