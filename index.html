@@ -12,7 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   
 body {
@@ -232,11 +232,17 @@ document.addEventListener('DOMContentLoaded', () => {
 /* SIMPAN */
 window.simpan = async function () {
 
-  if (!document.getElementById('nama').value ||
-      !document.getElementById('nik').value) {
-    alert("Nama dan NIK wajib diisi!");
-    return;
-  }
+if (!document.getElementById('nama').value ||
+    !document.getElementById('nik').value) {
+
+  Swal.fire({
+    icon: 'warning',
+    title: 'Data Belum Lengkap',
+    text: 'Nama dan NIK wajib diisi'
+  });
+
+  return;
+}
 
 const data = {
   nama: document.getElementById('nama').value,
@@ -251,12 +257,21 @@ const data = {
     .from('presensi')
     .insert([data]);
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+ if (error) {
+  Swal.fire({
+    icon: 'error',
+    title: 'Gagal Menyimpan',
+    text: error.message
+  });
 
-alert("Data berhasil disimpan");
+  return;
+}
+
+Swal.fire({
+  icon: 'success',
+  title: 'Berhasil',
+  text: 'Data berhasil disimpan'
+});
 
 document.getElementById('nama').value = "";
 document.getElementById('nik').value = "";
@@ -364,10 +379,15 @@ function renderChart(data) {
 }
 
 window.exportExcel = function () {
-  if (!allData.length) {
-    alert("Data kosong!");
-    return;
-  }
+if (!allData.length) {
+  Swal.fire({
+    icon: 'info',
+    title: 'Data Kosong',
+    text: 'Tidak ada data untuk diexport'
+  });
+
+  return;
+}
 
   const exportData = allData.map(item => ({
     Nama: item.nama,
