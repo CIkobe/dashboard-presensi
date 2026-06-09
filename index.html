@@ -4,12 +4,15 @@
 <meta charset="utf-8">
 <title>ATTENDANCE LIST DOR</title>
 
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
 <style>
   
 body {
@@ -162,32 +165,13 @@ th,td {
 
   <h3>Grafik Kehadiran per Departemen</h3>
 <canvas id="chartDept"></canvas>
+
+  <button onclick="exportExcel()">Export Excel</button>
   
-<h3>Data Presensi</h3>
-
-  <div class="table-wrapper">
-<table>
-
-<thead>
-<tr>
-<th>Nama</th>
-<th>NIK</th>
-<th>Jabatan</th>
-<th>Departemen</th>
-<th>Status</th>
-<th>Waktu</th>
-</tr>
-</thead>
-
-<tbody id="dataPresensi"></tbody>
-
-</table>
-
-</div>
-
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-
+const XLSX = window.XLSX;
+  
 const supabaseUrl = 'https://qasbqrteajokqhapjutf.supabase.co';
 const supabaseKey = 'sb_publishable_xVuvGAJxAB7lb7AUZ-Szrw_EOQY8e5j';
 
@@ -195,7 +179,7 @@ const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
   let chart; 
   let selectedDept = [];
-
+let allData = [];
 function formatDept(dept) {
   if (!dept) return "-";
 
@@ -307,6 +291,7 @@ async function loadData() {
       </tr>
     `;
   });
+  allData = data;
   renderChart(data);
 }
 
@@ -365,6 +350,31 @@ function renderChart(data) {
     }
   });
 }
+
+window.exportExcel = function () {
+  if (!allData.length) {
+    alert("Data kosong!");
+    return;
+  }
+
+  const exportData = allData.map(item => ({
+    Nama: item.nama,
+    NIK: item.nik,
+    Jabatan: item.jabatan,
+    Departemen: formatDept(item.departemen),
+    Status: item.status,
+    Waktu: item.created_at
+      ? new Date(item.created_at).toLocaleString()
+      : "-"
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "Presensi");
+
+  XLSX.writeFile(wb, "data-presensi.xlsx");
+};
   
 </script>
 
