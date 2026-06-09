@@ -195,6 +195,30 @@ const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
   let chart; 
   let selectedDept = [];
+
+  function formatDept(dept) {
+  if (!dept) return "-";
+
+  if (Array.isArray(dept)) {
+    return dept.join(' • ');
+  }
+
+  if (typeof dept === "string") {
+    try {
+      const parsed = JSON.parse(dept);
+      if (Array.isArray(parsed)) {
+        return parsed.join(' • ');
+      }
+      return dept;
+    } catch {
+      return dept.includes(",")
+        ? dept.split(",").map(x => x.trim()).join(' • ')
+        : dept;
+    }
+  }
+
+  return dept;
+}
   
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -228,7 +252,7 @@ const data = {
   nama: document.getElementById('nama').value,
   nik: document.getElementById('nik').value,
   jabatan: document.getElementById('jabatan').value,
-  departemen: selectedDept,
+  departemen: selectedDept.length ? selectedDept : [],
   status: document.getElementById('status').value,
   keterangan: document.getElementById('keterangan').value
 };
@@ -277,7 +301,7 @@ async function loadData() {
         <td>${item.nama}</td>
         <td>${item.nik}</td>
         <td>${item.jabatan}</td>
-        <td>${Array.isArray(item.departemen) ? item.departemen.join(' • ') : item.departemen}</td>
+        <td>${formatDept(item.departemen)}</td>
         <td>${item.status}</td>
         <td>${item.created_at ? new Date(item.created_at).toLocaleString() : '-'}</td>
       </tr>
