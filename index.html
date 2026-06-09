@@ -272,10 +272,14 @@ loadData();
 
 /* LOAD DATA */
 async function loadData() {
-  const { data, error } = await supabaseClient
-    .from('presensi')
-    .select('*')
-    .order('created_at', { ascending: false });
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const { data, error } = await supabaseClient
+  .from('presensi')
+  .select('*')
+  .gte('created_at', today.toISOString())
+  .order('created_at', { ascending: false });
 
   if (error) {
     console.error(error);
