@@ -6,6 +6,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -158,6 +160,9 @@ th,td {
 
 <button onclick="simpan()">Simpan</button>
 
+  <h3>Grafik Kehadiran per Departemen</h3>
+<canvas id="chartDept"></canvas>
+  
 <h3>Data Presensi</h3>
 
   <div class="table-wrapper">
@@ -188,10 +193,10 @@ const supabaseKey = 'sb_publishable_xVuvGAJxAB7lb7AUZ-Szrw_EOQY8e5j';
 
 const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-let selectedDept = [];
-
-/* klik departemen */
-window.addEventListener('load', () => {
+  let chart; 
+  let selectedDept = [];
+  
+document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.dept-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -223,7 +228,7 @@ window.simpan = async function () {
     nama: document.getElementById('nama').value,
     nik: document.getElementById('nik').value,
     jabatan: document.getElementById('jabatan').value,
-    departemen: selectedDept,
+    departemen: selectedDept.length ? selectedDept : null,
     status: document.getElementById('status').value,
     keterangan: document.getElementById('keterangan').value
   };
@@ -237,17 +242,18 @@ window.simpan = async function () {
     return;
   }
 
-  alert("Data berhasil disimpan");
+alert("Data berhasil disimpan");
 
-  document.getElementById('nama').value = "";
-  document.getElementById('nik').value = "";
-  document.getElementById('jabatan').value = "";
-  document.getElementById('keterangan').value = "";
+document.getElementById('nama').value = "";
+document.getElementById('nik').value = "";
+document.getElementById('jabatan').value = "";
+document.getElementById('keterangan').value = "";
 
-  selectedDept = [];
-  document.querySelectorAll('.dept-item').forEach(el => el.classList.remove('active'));
+selectedDept = [];
+document.querySelectorAll('.dept-item').forEach(el => el.classList.remove('active'));
 
-  loadData();
+loadData();
+
 };
 
 /* LOAD DATA */
@@ -277,11 +283,46 @@ async function loadData() {
       </tr>
     `;
   });
+  renderChart(data);
 }
 
 /* AUTO LOAD */
 loadData();
 
+  function renderChart(data) {
+  const deptCount = {};
+
+  data.forEach(item => {
+    let dept = item.departemen;
+
+    if (Array.isArray(dept)) {
+      dept.forEach(d => {
+        deptCount[d] = (deptCount[d] || 0) + 1;
+      });
+    } else if (dept) {
+      deptCount[dept] = (deptCount[dept] || 0) + 1;
+    }
+  });
+
+  const labels = Object.keys(deptCount);
+  const values = Object.values(deptCount);
+
+  const ctx = document.getElementById('chartDept');
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Jumlah Presensi',
+        data: values
+      }]
+    }
+  });
+}
+  
 </script>
 
 </body>
