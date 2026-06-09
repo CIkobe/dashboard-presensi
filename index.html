@@ -309,21 +309,43 @@ const { data, error } = await supabaseClient
 loadData();
 
 function renderChart(data) {
+
+  const allDepartments = [
+    "Manex",
+    "Produksi",
+    "Maintenance",
+    "Sparepart",
+    "Utility",
+    "Warehouse",
+    "RMPM",
+    "QC",
+    "GA",
+    "HC",
+    "Project"
+  ];
+
   const deptCount = {};
 
+  // semua dept default 0
+  allDepartments.forEach(dept => {
+    deptCount[dept] = 0;
+  });
+
+  // hitung data presensi
   data.forEach(item => {
-   const deptArray = parseDept(item.departemen);
+    const deptArray = parseDept(item.departemen);
 
     deptArray.forEach(d => {
-      const clean = String(d).replace(/[\[\]"]/g, "").trim();
-      if (!clean) return;
+      const clean = String(d).trim();
 
-      deptCount[clean] = (deptCount[clean] || 0) + 1;
+      if (deptCount.hasOwnProperty(clean)) {
+        deptCount[clean]++;
+      }
     });
   });
 
-  const labels = Object.keys(deptCount);
-  const values = Object.values(deptCount);
+  const labels = allDepartments;
+  const values = allDepartments.map(dept => deptCount[dept]);
 
   const ctx = document.getElementById('chartDept');
 
