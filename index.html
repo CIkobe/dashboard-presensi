@@ -213,8 +213,18 @@ th,td {
 
 <button onclick="simpan()">Simpan</button>
 
-  <h3>Grafik Kehadiran per Departemen</h3>
+<h3>Grafik Kehadiran per Departemen</h3>
 <canvas id="chartDept"></canvas>
+
+<h3>Yang Sudah Absen Hari Ini</h3>
+
+<div id="listNama"
+style="
+background:#f8f9fa;
+padding:15px;
+border-radius:8px;
+margin-bottom:20px;">
+</div>
 
   <button onclick="exportExcel()">Export Excel</button>
 
@@ -332,13 +342,18 @@ loadData();
 
 /* LOAD DATA */
 async function loadData() {
-const today = new Date();
-today.setHours(0, 0, 0, 0);
+
+const start = new Date();
+start.setHours(0,0,0,0);
+
+const end = new Date();
+end.setHours(23,59,59,999);
 
 const { data, error } = await supabaseClient
   .from('presensi')
   .select('*')
-  .gte('created_at', today.toISOString())
+  .gte('created_at', start.toISOString())
+  .lte('created_at', end.toISOString())
   .order('created_at', { ascending: false });
 
   if (error) {
@@ -362,7 +377,9 @@ const { data, error } = await supabaseClient
     `;
   });
   allData = data;
-  renderChart(data);
+renderChart(data);
+renderNama(data);
+  
 }
 
 /* AUTO LOAD */
@@ -423,6 +440,28 @@ function renderChart(data) {
   });
 }
 
+  function renderNama(data){
+
+  const container = document.getElementById('listNama');
+
+  if(data.length === 0){
+    container.innerHTML = "Belum ada yang absen";
+    return;
+  }
+
+  container.innerHTML = data.map(item => `
+    <span style="
+      display:inline-block;
+      margin:4px;
+      padding:8px 12px;
+      background:#007bff;
+      color:white;
+      border-radius:20px;
+      font-size:14px;">
+      ${item.nama}
+    </span>
+  `).join('');
+}
 window.exportExcel = function () {
 if (!allData.length) {
   Swal.fire({
