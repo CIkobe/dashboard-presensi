@@ -207,7 +207,6 @@ th,td {
 <select id="status">
   <option value="Hadir">Hadir</option>
   <option value="Izin">Izin</option>
-  <option value="Alpha">Alpha</option>
 </select>
 
 <input id="keterangan" placeholder="Keterangan">
@@ -398,7 +397,6 @@ renderNama(data);
 /* AUTO LOAD */
 loadData();
 
-
 function renderChart(data) {
   const allDepartments = [
     "Manex","Produksi","Maintenance","Sparepart","Utility",
@@ -412,18 +410,27 @@ function renderChart(data) {
     deptAlpha[dept] = 0;
   });
 
-  data.forEach(item => {
+data.forEach(item => {
     const deptArray = parseDept(item.departemen);
     deptArray.forEach(d => {
       const clean = String(d).trim();
       if (!allDepartments.includes(clean)) return;
-      if (item.status === "Hadir")      deptHadir[clean]++;
-      else if (item.status === "Izin")  deptIzin[clean]++;
-      else if (item.status === "Alpha") deptAlpha[clean]++;
+      if (item.status === "Hadir")     deptHadir[clean]++;
+      else if (item.status === "Izin") deptIzin[clean]++;
     });
   });
 
+  const now = new Date();
+  const sudahJam9 = now.getHours() >= 9;
+
+  allDepartments.forEach(dept => {
+    if (sudahJam9 && deptHadir[dept] === 0 && deptIzin[dept] === 0) {
+      deptAlpha[dept] = 1;
+    }
+  });
+
   const ctx = document.getElementById('chartDept');
+  
   if (chart) chart.destroy();
 
   chart = new Chart(ctx, {
