@@ -215,7 +215,19 @@ th,td {
 <button onclick="simpan()">Simpan</button>
 
 <h3>Grafik Kehadiran per Departemen</h3>
-<canvas id="chartDept"></canvas>
+
+  <canvas id="chartDept"></canvas>
+<div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:13px;color:#555;">
+  <span style="display:flex;align-items:center;gap:6px;">
+    <span style="width:12px;height:12px;border-radius:2px;background:#378add;display:inline-block;"></span>Hadir
+  </span>
+  <span style="display:flex;align-items:center;gap:6px;">
+    <span style="width:12px;height:12px;border-radius:2px;background:#EF9F27;display:inline-block;"></span>Izin
+  </span>
+  <span style="display:flex;align-items:center;gap:6px;">
+    <span style="width:12px;height:12px;border-radius:2px;background:#E24B4A;display:inline-block;"></span>Alpha
+  </span>
+</div>
 
 <h3>Yang Sudah Absen Hari Ini</h3>
 
@@ -386,62 +398,56 @@ renderNama(data);
 /* AUTO LOAD */
 loadData();
 
-function renderChart(data) {
 
+function renderChart(data) {
   const allDepartments = [
-    "Manex",
-    "Produksi",
-    "Maintenance",
-    "Sparepart",
-    "Utility",
-    "Warehouse",
-    "RMPM",
-    "QC",
-    "GA",
-    "HC",
-    "Project",
-    "HSE"
+    "Manex","Produksi","Maintenance","Sparepart","Utility",
+    "Warehouse","RMPM","QC","GA","HC","Project","HSE"
   ];
 
-  const deptCount = {};
-
-  // semua dept default 0
+  const deptHadir = {}, deptIzin = {}, deptAlpha = {};
   allDepartments.forEach(dept => {
-    deptCount[dept] = 0;
+    deptHadir[dept] = 0;
+    deptIzin[dept] = 0;
+    deptAlpha[dept] = 0;
   });
 
-  // hitung data presensi
   data.forEach(item => {
     const deptArray = parseDept(item.departemen);
-
     deptArray.forEach(d => {
       const clean = String(d).trim();
-
-      if (deptCount.hasOwnProperty(clean)) {
-        deptCount[clean]++;
-      }
+      if (!allDepartments.includes(clean)) return;
+      if (item.status === "Hadir")      deptHadir[clean]++;
+      else if (item.status === "Izin")  deptIzin[clean]++;
+      else if (item.status === "Alpha") deptAlpha[clean]++;
     });
   });
 
-  const labels = allDepartments;
-  const values = allDepartments.map(dept => deptCount[dept]);
-
   const ctx = document.getElementById('chartDept');
-
   if (chart) chart.destroy();
 
   chart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: labels,
-      datasets: [{
-        label: 'Jumlah Presensi',
-        data: values
-      }]
+      labels: allDepartments,
+      datasets: [
+        { label: 'Hadir', data: allDepartments.map(d => deptHadir[d]), backgroundColor: '#378add' },
+        { label: 'Izin',  data: allDepartments.map(d => deptIzin[d]),  backgroundColor: '#EF9F27' },
+        { label: 'Alpha', data: allDepartments.map(d => deptAlpha[d]), backgroundColor: '#E24B4A' }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+      }
     }
   });
 }
 
+  
   function renderNama(data){
 
   const container = document.getElementById('listNama');
