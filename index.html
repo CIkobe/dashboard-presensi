@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>ATTENDANCE LIST DOR</title>
+<title>Presensi DOR | PT Kobe Boga Utama</title>
 
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,182 +14,603 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-  
+
+:root {
+  --primary: #1268e8;
+  --primary-dark: #0748ad;
+  --primary-soft: #eaf3ff;
+  --accent: #7c3aed;
+  --success: #16a065;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --ink: #152238;
+  --muted: #6b7a90;
+  --line: #e5ebf3;
+  --surface: rgba(255,255,255,.93);
+  --shadow: 0 18px 50px rgba(26, 63, 114, .12);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
 body {
   margin: 0;
-  font-family: Arial;
-  background:#f5f5f5;
-  padding:20px;
+  min-height: 100vh;
+  padding: 28px 18px 46px;
   overflow-x: hidden;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 8% 8%, rgba(18,104,232,.16), transparent 28%),
+    radial-gradient(circle at 92% 4%, rgba(124,58,237,.13), transparent 27%),
+    linear-gradient(145deg, #eef5ff 0%, #f7f9fd 42%, #f4f0ff 100%);
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+body::before {
+  width: 260px;
+  height: 260px;
+  left: -95px;
+  bottom: 8%;
+  background: rgba(18,104,232,.08);
+}
+
+body::after {
+  width: 320px;
+  height: 320px;
+  right: -130px;
+  top: 32%;
+  background: rgba(124,58,237,.07);
 }
 
 .container {
-  max-width:800px;
-  margin:auto;
-  background:white;
-  padding:20px;
-  border-radius:10px;
+  width: min(1120px, 100%);
+  margin: 0 auto;
 }
+
+.app-shell {
+  display: grid;
+  gap: 22px;
+}
+
+.header-app {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 26px;
+  padding: 36px 40px;
+  border: 1px solid rgba(255,255,255,.38);
+  border-radius: 28px;
+  color: #fff;
+  background:
+    linear-gradient(120deg, rgba(0,32,91,.18), rgba(61,16,135,.16)),
+    linear-gradient(135deg, #0b63dc 0%, #174fb6 50%, #7338d2 100%);
+  box-shadow: 0 24px 60px rgba(25, 73, 157, .28);
+}
+
+.header-app::before,
+.header-app::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.15);
+}
+
+.header-app::before {
+  width: 360px;
+  height: 360px;
+  top: -205px;
+  right: -55px;
+  box-shadow: 0 0 0 42px rgba(255,255,255,.035), 0 0 0 88px rgba(255,255,255,.025);
+}
+
+.header-app::after {
+  width: 210px;
+  height: 210px;
+  left: 44%;
+  bottom: -165px;
+  box-shadow: 0 0 0 38px rgba(255,255,255,.03);
+}
+
+.header-copy,
+.header-status { position: relative; z-index: 1; }
+
+.brand-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.brand-kicker::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6df1ad;
+  box-shadow: 0 0 0 5px rgba(109,241,173,.16);
+}
+
+.header-app h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1;
+  letter-spacing: -.045em;
+}
+
+.header-app h2 {
+  margin: 12px 0 5px;
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 750;
+}
+
+.header-app p {
+  margin: 0;
+  color: rgba(255,255,255,.78);
+  font-size: 14px;
+}
+
+.header-status {
+  min-width: 230px;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 22px;
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(15px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+}
+
+.status-label {
+  color: rgba(255,255,255,.72);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+#liveTime {
+  display: block;
+  margin: 5px 0 2px;
+  font-size: 34px;
+  font-weight: 850;
+  letter-spacing: -.04em;
+}
+
+#liveDate {
+  color: rgba(255,255,255,.82);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.card {
+  border: 1px solid rgba(222,231,243,.95);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+}
+
+.card-inner { padding: 28px; }
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.section-heading h3 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -.025em;
+}
+
+.section-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.section-icon {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--primary-soft), #f1eaff);
+  font-size: 22px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.form-group { min-width: 0; }
+.form-group.full { grid-column: 1 / -1; }
+
+label.field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 8px;
+  color: #34435a;
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.required { color: var(--danger); }
+.field-hint { color: #9aa7b9; font-size: 11px; font-weight: 600; }
 
 input, select {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #dce4ef;
+  border-radius: 13px;
+  outline: none;
+  background: #fbfdff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease, background .2s ease;
+}
+
+input::placeholder { color: #a5b0bf; }
+
+input:focus, select:focus {
+  border-color: #61a2f8;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(18,104,232,.11);
+}
+
+.dept-wrap {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #dce5f0;
+}
+
+.dept-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dept-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 45px;
+  padding: 10px 36px 10px 13px;
+  overflow: hidden;
+  border: 1px solid #e2e9f3;
+  border-radius: 13px;
+  background: #f7f9fc;
+  color: #41516a;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  font-weight: 720;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.dept-item::after {
+  content: '✓';
+  position: absolute;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d1dbea;
+  border-radius: 50%;
+  color: transparent;
+  background: #fff;
+  font-size: 12px;
+  transition: all .2s ease;
+}
+
+.dept-item:hover {
+  transform: translateY(-2px);
+  border-color: #a9c9f7;
+  box-shadow: 0 8px 18px rgba(28,89,171,.08);
+}
+
+.dept-item.active {
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), #6243dd);
+  box-shadow: 0 10px 22px rgba(18,104,232,.22);
+}
+
+.dept-item.active::after {
+  border-color: rgba(255,255,255,.45);
+  color: var(--primary);
+  background: #fff;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
 }
 
 button {
-  padding:10px 20px;
-  cursor:pointer;
-  border: none;
-  border-radius: 6px;
-  background: #007bff;
-  color: white;
+  min-height: 44px;
+  padding: 11px 19px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: var(--primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 780;
+  transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
 }
 
+button:hover:not(:disabled) { transform: translateY(-2px); }
+button:active:not(:disabled) { transform: translateY(0); }
+button:disabled { cursor: not-allowed; opacity: .55; }
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 170px;
+  background: linear-gradient(135deg, var(--primary), #5d43db);
+  box-shadow: 0 10px 22px rgba(18,104,232,.24);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--primary-dark);
+  background: #edf5ff;
+  box-shadow: inset 0 0 0 1px #d5e6ff;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 126px;
+  padding: 20px;
+  border: 1px solid #e4ebf4;
+  border-radius: 20px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 14px 34px rgba(38,70,113,.08);
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  right: -34px;
+  bottom: -40px;
+  border-radius: 50%;
+  background: var(--stat-soft, #eaf3ff);
+}
+
+.stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.stat-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--stat-soft, #eaf3ff);
+  font-size: 17px;
+}
+
+.stat-value {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+  font-size: 34px;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -.045em;
+}
+
+.stat-note {
+  position: relative;
+  z-index: 1;
+  margin-top: 7px;
+  color: #8a97aa;
+  font-size: 11px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, .8fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.chart-box {
+  position: relative;
+  height: 390px;
+}
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid #e2e9f2;
+  border-radius: 999px;
+  background: #fff;
+  color: #59687d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.attendance-panel .card-inner { padding-bottom: 22px; }
+
+#listNama {
+  max-height: 375px;
+  min-height: 150px;
+  overflow: auto;
+  display: flex;
+  align-content: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 5px 8px 0;
+}
+
+.name-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 8px 11px 8px 8px;
+  border: 1px solid #dbe8fa;
+  border-radius: 999px;
+  color: #215084;
+  background: linear-gradient(135deg, #f4f9ff, #eef4ff);
+  font-size: 12px;
+  font-weight: 730;
+  box-shadow: 0 5px 12px rgba(24,87,170,.06);
+}
+
+.name-avatar {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.empty-state {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 145px;
+  padding: 20px;
+  border: 1px dashed #d6dfeb;
+  border-radius: 16px;
+  color: var(--muted);
+  background: #fafcff;
+  text-align: center;
+  font-size: 13px;
+}
+
+.empty-state span { font-size: 30px; }
+
+.panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #edf1f6;
+}
+
+.panel-footer small { color: #8a97aa; }
+
 .table-wrapper {
+  display: none;
   width: 100%;
   overflow-x: auto;
 }
 
 table {
   width: 100%;
+  min-width: 600px;
   margin-top: 20px;
   border-collapse: collapse;
-  min-width: 600px;
 }
 
-th,td {
-  border:1px solid #ddd;
-  padding:8px;
-}
-
-/* ===== DEPARTEMEN GRID ===== */
-
-.dept-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.dept-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f2f2f2;
-  padding: 10px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-  .dept-item.active {
-  background: #007bff;
-  color: white;
-}
-  
-@media (max-width: 600px) {
-  .dept-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .dept-item {
-    font-size: 13px;
-    padding: 12px;
-  }
-
-  .container {
-    padding: 12px;
-  }
-}
-  body {
-  overflow-x: hidden;
-}
-
-@media (max-width: 600px) {
-  input, select {
-    font-size: 14px;
-    padding: 8px;
-  }
-
-  button {
-    width: 100%;
-  }
-}
-
-  .table-wrapper {
-  display: none;
-}
-
-.header-app{
-  text-align:center;
-  margin-bottom:25px;
-  padding:20px;
-  background:linear-gradient(135deg,#007bff,#0056b3);
-  border-radius:12px;
-  color:white;
-  box-shadow:0 4px 12px rgba(0,0,0,0.15);
-}
-
-.header-app h1{
-  margin:0;
-  font-size:32px;
-  font-weight:700;
-  letter-spacing:2px;
-  color:white;
-}
-
-.header-app h2{
-  margin:8px 0 4px;
-  font-size:20px;
-  font-weight:600;
-  color:white;
-}
-
-.header-app p{
-  margin:0;
-  font-size:14px;
-  color:rgba(255,255,255,0.9);
-}
-
-.header-app::after{
-  content:'';
-  display:block;
-  width:80px;
-  height:3px;
-  background:white;
-  margin:15px auto 0;
-  border-radius:10px;
-}
-  
+th, td { padding: 10px; border: 1px solid #ddd; }
 
 /* ===== WHEEL OF NAMES ===== */
 .wheel-section {
   position: relative;
   overflow: hidden;
-  margin-top: 24px;
-  padding: 24px;
-  border: 1px solid #d9e8ff;
-  border-radius: 18px;
+  padding: 30px;
+  border: 1px solid rgba(214,226,243,.95);
+  border-radius: 26px;
   background:
-    radial-gradient(circle at 15% 10%, rgba(0,123,255,.13), transparent 34%),
-    radial-gradient(circle at 90% 85%, rgba(111,66,193,.14), transparent 35%),
-    linear-gradient(145deg, #ffffff, #f5f9ff);
-  box-shadow: 0 12px 35px rgba(0, 86, 179, .12);
+    radial-gradient(circle at 10% 10%, rgba(18,104,232,.15), transparent 30%),
+    radial-gradient(circle at 90% 85%, rgba(124,58,237,.14), transparent 34%),
+    rgba(255,255,255,.92);
+  box-shadow: var(--shadow);
 }
 
 .wheel-section::before {
   content: '';
   position: absolute;
-  width: 180px;
-  height: 180px;
-  top: -100px;
-  right: -70px;
+  width: 220px;
+  height: 220px;
+  top: -120px;
+  right: -85px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(0,123,255,.18), rgba(111,66,193,.12));
+  background: linear-gradient(135deg, rgba(18,104,232,.17), rgba(124,58,237,.11));
   pointer-events: none;
 }
 
@@ -197,27 +618,43 @@ th,td {
   position: relative;
   z-index: 1;
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 15px;
+}
+
+.wheel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  color: #5e35b1;
+  background: #f0eaff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
 }
 
 .wheel-header h3 {
   margin: 0 0 6px;
-  font-size: 24px;
-  color: #123b70;
+  color: #17365f;
+  font-size: 25px;
+  letter-spacing: -.025em;
 }
 
 .wheel-header p {
   margin: 0;
-  color: #607086;
-  font-size: 14px;
+  color: var(--muted);
+  font-size: 13px;
   line-height: 1.5;
 }
 
 .wheel-stage {
   position: relative;
-  width: min(100%, 560px);
+  width: min(100%, 570px);
   aspect-ratio: 1 / 1;
-  margin: 12px auto 0;
+  margin: 14px auto 0;
 }
 
 #wheelCanvas {
@@ -225,20 +662,20 @@ th,td {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  filter: drop-shadow(0 14px 18px rgba(16, 55, 103, .22));
+  filter: drop-shadow(0 18px 22px rgba(16,55,103,.24));
 }
 
 .wheel-pointer {
   position: absolute;
   z-index: 5;
-  top: -4px;
+  top: -5px;
   left: 50%;
-  width: 42px;
-  height: 52px;
+  width: 44px;
+  height: 54px;
   transform: translateX(-50%);
-  background: #ff3b30;
+  background: linear-gradient(180deg, #ff5e5e, #e62b35);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
-  filter: drop-shadow(0 4px 3px rgba(0,0,0,.25));
+  filter: drop-shadow(0 5px 4px rgba(0,0,0,.25));
 }
 
 .wheel-pointer::after {
@@ -247,7 +684,7 @@ th,td {
   width: 13px;
   height: 13px;
   left: 50%;
-  top: 6px;
+  top: 7px;
   transform: translateX(-50%);
   border-radius: 50%;
   background: #fff;
@@ -259,39 +696,33 @@ th,td {
   align-items: center;
   justify-content: center;
   gap: 9px;
-  min-width: 210px;
-  margin: 20px auto 0;
-  padding: 13px 24px;
+  min-width: 220px;
+  margin: 22px auto 0;
+  padding: 13px 25px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #007bff, #6f42c1);
-  box-shadow: 0 8px 18px rgba(0, 94, 255, .28);
-  font-size: 16px;
-  font-weight: 700;
-  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  box-shadow: 0 10px 23px rgba(31,81,190,.29);
+  font-size: 15px;
 }
 
 #wheelSpinBtn:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 11px 23px rgba(0, 94, 255, .34);
+  box-shadow: 0 13px 27px rgba(31,81,190,.35);
 }
 
-#wheelSpinBtn:disabled {
-  cursor: not-allowed;
-  opacity: .55;
-  box-shadow: none;
-}
+#wheelSpinBtn:disabled { box-shadow: none; }
 
 .wheel-winner {
   display: none;
-  margin: 18px auto 0;
   max-width: 520px;
-  padding: 14px 18px;
-  text-align: center;
+  margin: 18px auto 0;
+  padding: 15px 18px;
   border: 1px solid #b9ddc3;
-  border-radius: 12px;
-  background: #effbf2;
+  border-radius: 15px;
   color: #17622d;
-  font-size: 15px;
+  background: #effbf2;
+  text-align: center;
+  font-size: 13px;
 }
 
 .wheel-winner.show {
@@ -302,8 +733,8 @@ th,td {
 .wheel-winner strong {
   display: block;
   margin-top: 4px;
-  font-size: 24px;
   color: #0f7a2f;
+  font-size: 24px;
 }
 
 @keyframes winnerPop {
@@ -324,132 +755,224 @@ th,td {
 }
 
 @keyframes confettiFall {
-  0% { transform: translate3d(0, -20px, 0) rotate(0deg); opacity: 1; }
-  100% { transform: translate3d(var(--drift), 110vh, 0) rotate(900deg); opacity: .9; }
+  0% { transform: translate3d(0,-20px,0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--drift),110vh,0) rotate(900deg); opacity: .9; }
+}
+
+.footer-note {
+  padding: 5px 10px 0;
+  color: #8492a6;
+  text-align: center;
+  font-size: 11px;
+}
+
+@media (max-width: 900px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .dashboard-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .header-app { grid-template-columns: 1fr; }
+  .header-status { width: min(100%, 360px); }
 }
 
 @media (max-width: 600px) {
-  .wheel-section { padding: 18px 12px; }
+  body { padding: 13px 10px 30px; }
+  .app-shell { gap: 14px; }
+  .header-app { min-height: auto; padding: 27px 22px; border-radius: 22px; }
+  .header-app h1 { font-size: 38px; }
+  .header-status { min-width: 0; padding: 17px; }
+  #liveTime { font-size: 29px; }
+  .card, .wheel-section { border-radius: 20px; }
+  .card-inner { padding: 20px 16px; }
+  .section-heading h3 { font-size: 19px; }
+  .form-grid { grid-template-columns: 1fr; gap: 13px; }
+  .form-group.full { grid-column: auto; }
+  .dept-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  .dept-item { padding: 10px 32px 10px 10px; font-size: 12px; }
+  .form-actions, .panel-footer { align-items: stretch; flex-direction: column; }
+  .btn-primary, .btn-secondary, button { width: 100%; }
+  .dashboard-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+  .stat-card { min-height: 115px; padding: 16px; border-radius: 17px; }
+  .stat-value { font-size: 29px; }
+  .chart-box { height: 330px; }
+  .wheel-section { padding: 22px 12px; }
   .wheel-header h3 { font-size: 21px; }
-  .wheel-pointer {
-    width: 34px;
-    height: 43px;
-  }
+  .wheel-pointer { width: 34px; height: 43px; }
+}
+
+@media (max-width: 380px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .dept-grid { grid-template-columns: 1fr; }
 }
 
 </style>
 
 </head>
 
+
 <body>
-
 <div class="container">
+  <main class="app-shell">
+    <header class="header-app">
+      <div class="header-copy">
+        <div class="brand-kicker">Sistem Presensi Digital</div>
+        <h1>PRESENSI DOR</h1>
+        <h2>PT Kobe Boga Utama</h2>
+        <p>Factory Bojonegoro · Attendance Dashboard</p>
+      </div>
+      <div class="header-status">
+        <span class="status-label">Waktu sekarang</span>
+        <strong id="liveTime">--:--:--</strong>
+        <div id="liveDate">Memuat tanggal...</div>
+      </div>
+    </header>
 
-<div class="header-app">
-  <h1>PRESENSI DOR</h1>
-  <h2>PT Kobe Boga Utama</h2>
-  <p>Factory Bojonegoro</p>
+    <section class="card">
+      <div class="card-inner">
+        <div class="section-heading">
+          <div>
+            <h3>Form Presensi</h3>
+            <p>Lengkapi data diri, pilih departemen, lalu simpan kehadiran Anda.</p>
+          </div>
+          <div class="section-icon">✍️</div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="field-label" for="nama"><span>Nama Lengkap <span class="required">*</span></span></label>
+            <input id="nama" autocomplete="name" placeholder="Contoh: Agung Prasetyo">
+          </div>
+          <div class="form-group">
+            <label class="field-label" for="nik"><span>NIK <span class="required">*</span></span><span class="field-hint">Wajib diisi</span></label>
+            <input id="nik" inputmode="numeric" autocomplete="off" placeholder="Masukkan NIK">
+          </div>
+          <div class="form-group">
+            <label class="field-label" for="jabatan">Jabatan</label>
+            <input id="jabatan" autocomplete="organization-title" placeholder="Contoh: Operator">
+          </div>
+          <div class="form-group">
+            <label class="field-label" for="status">Status Kehadiran</label>
+            <select id="status">
+              <option value="Hadir">Hadir</option>
+              <option value="Izin">Izin</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label class="field-label" for="keterangan"><span>Keterangan</span><span class="field-hint">Opsional</span></label>
+            <input id="keterangan" placeholder="Tambahkan catatan bila diperlukan">
+          </div>
+        </div>
+
+        <div class="dept-wrap">
+          <label class="field-label"><span>Departemen</span><span class="field-hint">Bisa pilih lebih dari satu</span></label>
+          <div class="dept-grid">
+            <div class="dept-item" data-value="Manex">Manex</div>
+            <div class="dept-item" data-value="Produksi">Produksi</div>
+            <div class="dept-item" data-value="Maintenance">Maintenance</div>
+            <div class="dept-item" data-value="Sparepart">Sparepart</div>
+            <div class="dept-item" data-value="Utility">Utility</div>
+            <div class="dept-item" data-value="Warehouse">Warehouse</div>
+            <div class="dept-item" data-value="RMPM">RMPM</div>
+            <div class="dept-item" data-value="QC">QC</div>
+            <div class="dept-item" data-value="GA">GA</div>
+            <div class="dept-item" data-value="HC">HC</div>
+            <div class="dept-item" data-value="Project">Project</div>
+            <div class="dept-item" data-value="HSE">HSE</div>
+            <div class="dept-item" data-value="RND">RND</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" id="saveButton" onclick="simpan()"><span>✓</span> Simpan Presensi</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Ringkasan presensi hari ini">
+      <article class="stat-card" style="--stat-soft:#eaf3ff">
+        <div class="stat-top"><span>Total Presensi</span><span class="stat-icon">👥</span></div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-note">Data masuk hari ini</div>
+      </article>
+      <article class="stat-card" style="--stat-soft:#e9f9f1">
+        <div class="stat-top"><span>Hadir</span><span class="stat-icon">✓</span></div>
+        <div class="stat-value" id="statHadir">0</div>
+        <div class="stat-note">Karyawan hadir</div>
+      </article>
+      <article class="stat-card" style="--stat-soft:#fff5df">
+        <div class="stat-top"><span>Izin</span><span class="stat-icon">📝</span></div>
+        <div class="stat-value" id="statIzin">0</div>
+        <div class="stat-note">Karyawan berizin</div>
+      </article>
+      <article class="stat-card" style="--stat-soft:#f1eaff">
+        <div class="stat-top"><span>Departemen Aktif</span><span class="stat-icon">🏢</span></div>
+        <div class="stat-value" id="statDept">0</div>
+        <div class="stat-note">Departemen terwakili</div>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="card">
+        <div class="card-inner">
+          <div class="section-heading">
+            <div>
+              <h3>Grafik Kehadiran</h3>
+              <p>Rekap kehadiran hari ini berdasarkan departemen.</p>
+            </div>
+            <div class="legend-row">
+              <span class="legend-pill"><span class="legend-dot" style="background:#378add"></span>Hadir</span>
+              <span class="legend-pill"><span class="legend-dot" style="background:#EF9F27"></span>Izin</span>
+              <span class="legend-pill"><span class="legend-dot" style="background:#E24B4A"></span>Alpha</span>
+            </div>
+          </div>
+          <div class="chart-box"><canvas id="chartDept"></canvas></div>
+        </div>
+      </article>
+
+      <article class="card attendance-panel">
+        <div class="card-inner">
+          <div class="section-heading">
+            <div>
+              <h3>Sudah Absen Hari Ini</h3>
+              <p id="attendanceSummary">Daftar akan diperbarui otomatis.</p>
+            </div>
+            <div class="section-icon">✅</div>
+          </div>
+          <div id="listNama"></div>
+          <div class="panel-footer">
+            <small>Data sesuai presensi hari ini</small>
+            <button class="btn-secondary" onclick="exportExcel()"><span>⬇</span> Export Excel</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="wheel-section" id="wheelSection">
+      <div class="wheel-header">
+        <div class="wheel-badge">Random Picker</div>
+        <h3>🎯 Wheel of Names</h3>
+        <p id="wheelInfo">Nama peserta diambil otomatis dari daftar yang sudah absen hari ini.</p>
+      </div>
+      <div class="wheel-stage">
+        <div class="wheel-pointer" aria-hidden="true"></div>
+        <canvas id="wheelCanvas" width="700" height="700" aria-label="Roda pemilih nama"></canvas>
+      </div>
+      <button id="wheelSpinBtn" type="button">🎡 Putar Roda</button>
+      <div class="wheel-winner" id="wheelWinner" aria-live="polite">
+        Nama yang terpilih:
+        <strong id="wheelWinnerName">-</strong>
+      </div>
+    </section>
+
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Nama</th><th>NIK</th><th>Jabatan</th><th>Departemen</th><th>Status</th><th>Waktu</th></tr></thead>
+        <tbody id="dataPresensi"></tbody>
+      </table>
+    </div>
+
+    <footer class="footer-note">Presensi DOR · PT Kobe Boga Utama · Factory Bojonegoro</footer>
+  </main>
 </div>
 
-<input id="nama" placeholder="Nama">
-
-<input id="nik" placeholder="NIK">
-
-  <input id="jabatan" placeholder="Jabatan">
-
-<h4>Departemen</h4>
-
-<div class="dept-grid">
-
- <div class="dept-item" data-value="Manex">Manex</div>
-<div class="dept-item" data-value="Produksi">Produksi</div>
-<div class="dept-item" data-value="Maintenance">Maintenance</div>
-<div class="dept-item" data-value="Sparepart">Sparepart</div>
-<div class="dept-item" data-value="Utility">Utility</div>
-<div class="dept-item" data-value="Warehouse">Warehouse</div>
-<div class="dept-item" data-value="RMPM">RMPM</div>
-<div class="dept-item" data-value="QC">QC</div>
-<div class="dept-item" data-value="GA">GA</div>
-<div class="dept-item" data-value="HC">HC</div>
-<div class="dept-item" data-value="Project">Project</div>
-<div class="dept-item" data-value="HSE">HSE</div>
-<div class="dept-item" data-value="RND">RND</div>
-
-</div>
-
-<select id="status">
-  <option value="Hadir">Hadir</option>
-  <option value="Izin">Izin</option>
-</select>
-
-<input id="keterangan" placeholder="Keterangan">
-
-<button onclick="simpan()">Simpan</button>
-
-<h3>Grafik Kehadiran per Departemen</h3>
-
-  <canvas id="chartDept"></canvas>
-<div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:13px;color:#555;">
-  <span style="display:flex;align-items:center;gap:6px;">
-    <span style="width:12px;height:12px;border-radius:2px;background:#378add;display:inline-block;"></span>Hadir
-  </span>
-  <span style="display:flex;align-items:center;gap:6px;">
-    <span style="width:12px;height:12px;border-radius:2px;background:#EF9F27;display:inline-block;"></span>Izin
-  </span>
-  <span style="display:flex;align-items:center;gap:6px;">
-    <span style="width:12px;height:12px;border-radius:2px;background:#E24B4A;display:inline-block;"></span>Alpha
-  </span>
-</div>
-
-<h3>Yang Sudah Absen Hari Ini</h3>
-
-<div id="listNama"
-style="
-background:#f8f9fa;
-padding:15px;
-border-radius:8px;
-margin-bottom:20px;">
-</div>
-
-  <button onclick="exportExcel()">Export Excel</button>
-
-<section class="wheel-section" id="wheelSection">
-  <div class="wheel-header">
-    <h3>🎯 Wheel of Names</h3>
-    <p id="wheelInfo">Nama peserta diambil otomatis dari daftar yang sudah absen hari ini.</p>
-  </div>
-
-  <div class="wheel-stage">
-    <div class="wheel-pointer" aria-hidden="true"></div>
-    <canvas id="wheelCanvas" width="700" height="700" aria-label="Roda pemilih nama"></canvas>
-  </div>
-
-  <button id="wheelSpinBtn" type="button">🎡 Putar Roda</button>
-
-  <div class="wheel-winner" id="wheelWinner" aria-live="polite">
-    Nama yang terpilih:
-    <strong id="wheelWinnerName">-</strong>
-  </div>
-</section>
-
-<!-- 🔽 TABEL DATA TERSEMBUNYI -->
-<div class="table-wrapper">
-  <table>
-    <thead>
-      <tr>
-        <th>Nama</th>
-        <th>NIK</th>
-        <th>Jabatan</th>
-        <th>Departemen</th>
-        <th>Status</th>
-        <th>Waktu</th>
-      </tr>
-    </thead>
-
-    <tbody id="dataPresensi"></tbody>
-  </table>
-</div>
-  
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
   
@@ -483,6 +1006,8 @@ const wheelColors = [
   
 document.addEventListener('DOMContentLoaded', () => {
 
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
   document.getElementById('wheelSpinBtn').addEventListener('click', spinWheel);
 
   document.querySelectorAll('.dept-item').forEach(item => {
@@ -502,8 +1027,29 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+function updateDateTime() {
+  const now = new Date();
+  const timeElement = document.getElementById('liveTime');
+  const dateElement = document.getElementById('liveDate');
+
+  if (timeElement) {
+    timeElement.textContent = now.toLocaleTimeString('id-ID', {
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+
+  if (dateElement) {
+    dateElement.textContent = now.toLocaleDateString('id-ID', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
+}
+
 /* SIMPAN */
 window.simpan = async function () {
+
+const saveButton = document.getElementById('saveButton');
 
 if (!document.getElementById('nama').value ||
     !document.getElementById('nik').value) {
@@ -526,11 +1072,16 @@ const data = {
   keterangan: document.getElementById('keterangan').value
 };
 
-  const { error } = await supabaseClient
+  saveButton.disabled = true;
+saveButton.innerHTML = '<span>⏳</span> Menyimpan...';
+
+const { error } = await supabaseClient
     .from('presensi')
     .insert([data]);
 
  if (error) {
+  saveButton.disabled = false;
+  saveButton.innerHTML = '<span>✓</span> Simpan Presensi';
   Swal.fire({
     icon: 'error',
     title: 'Gagal Menyimpan',
@@ -539,6 +1090,9 @@ const data = {
 
   return;
 }
+
+saveButton.disabled = false;
+saveButton.innerHTML = '<span>✓</span> Simpan Presensi';
 
 Swal.fire({
   icon: 'success',
@@ -585,11 +1139,11 @@ const { data, error } = await supabaseClient
   data.forEach(item => {
     tbody.innerHTML += `
       <tr>
-        <td>${item.nama}</td>
-        <td>${item.nik}</td>
-        <td>${item.jabatan}</td>
-        <td>${formatDept(item.departemen)}</td>
-        <td>${item.status}</td>
+        <td>${escapeHTML(item.nama)}</td>
+        <td>${escapeHTML(item.nik)}</td>
+        <td>${escapeHTML(item.jabatan)}</td>
+        <td>${escapeHTML(formatDept(item.departemen))}</td>
+        <td>${escapeHTML(item.status)}</td>
         <td>${item.created_at ? new Date(item.created_at).toLocaleString() : '-'}</td>
       </tr>
     `;
@@ -597,6 +1151,7 @@ const { data, error } = await supabaseClient
   allData = data;
 renderChart(data);
 renderNama(data);
+renderStats(data);
 renderWheel(data);
   
 }
@@ -652,38 +1207,102 @@ data.forEach(item => {
     },
     options: {
       responsive: true,
-      plugins: { legend: { display: false } },
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#152238',
+          padding: 12,
+          cornerRadius: 10,
+          titleFont: { weight: '700' },
+          displayColors: true
+        }
+      },
+      datasets: { bar: { borderRadius: 7, borderSkipped: false, maxBarThickness: 34 } },
       scales: {
-        x: { stacked: true },
-        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+        x: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { color: '#728096', font: { size: 11 } }
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          ticks: { stepSize: 1, color: '#728096', precision: 0 },
+          grid: { color: 'rgba(111,128,150,.12)' },
+          border: { display: false }
+        }
       }
     }
   });
 }
 
   
-  function renderNama(data){
+function renderStats(data) {
+  const hadir = data.filter(item => item.status === 'Hadir').length;
+  const izin = data.filter(item => item.status === 'Izin').length;
+  const departments = new Set();
 
+  data.forEach(item => parseDept(item.departemen).forEach(dept => {
+    const clean = String(dept || '').trim();
+    if (clean) departments.add(clean);
+  }));
+
+  document.getElementById('statTotal').textContent = data.length;
+  document.getElementById('statHadir').textContent = hadir;
+  document.getElementById('statIzin').textContent = izin;
+  document.getElementById('statDept').textContent = departments.size;
+
+  const summary = document.getElementById('attendanceSummary');
+  if (summary) {
+    summary.textContent = data.length
+      ? `${data.length} data presensi tercatat hari ini.`
+      : 'Belum ada presensi yang masuk hari ini.';
+  }
+}
+
+function getInitials(name) {
+  return String(name || '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(word => word.charAt(0).toUpperCase())
+    .join('') || '?';
+}
+
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function renderNama(data) {
   const container = document.getElementById('listNama');
 
-  if(data.length === 0){
-    container.innerHTML = "Belum ada yang absen";
+  if (data.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <span>🕘</span>
+        <strong>Belum ada yang absen</strong>
+        <div>Nama karyawan akan muncul setelah presensi disimpan.</div>
+      </div>`;
     return;
   }
 
-  container.innerHTML = data.map(item => `
-    <span style="
-      display:inline-block;
-      margin:4px;
-      padding:8px 12px;
-      background:#007bff;
-      color:white;
-      border-radius:20px;
-      font-size:14px;">
-      ${item.nama}
-    </span>
-  `).join('');
+  container.innerHTML = data.map(item => {
+    const safeName = escapeHTML(item.nama || '-');
+    return `
+      <span class="name-chip" title="${safeName}">
+        <span class="name-avatar">${escapeHTML(getInitials(item.nama))}</span>
+        <span>${safeName}</span>
+      </span>`;
+  }).join('');
 }
+
 window.exportExcel = function () {
 if (!allData.length) {
   Swal.fire({
