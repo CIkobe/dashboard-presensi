@@ -165,6 +165,178 @@ th,td {
   border-radius:10px;
 }
   
+
+/* ===== WHEEL OF NAMES ===== */
+.wheel-section {
+  position: relative;
+  overflow: hidden;
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid #d9e8ff;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(0,123,255,.13), transparent 34%),
+    radial-gradient(circle at 90% 85%, rgba(111,66,193,.14), transparent 35%),
+    linear-gradient(145deg, #ffffff, #f5f9ff);
+  box-shadow: 0 12px 35px rgba(0, 86, 179, .12);
+}
+
+.wheel-section::before {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  top: -100px;
+  right: -70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0,123,255,.18), rgba(111,66,193,.12));
+  pointer-events: none;
+}
+
+.wheel-header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.wheel-header h3 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  color: #123b70;
+}
+
+.wheel-header p {
+  margin: 0;
+  color: #607086;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.wheel-stage {
+  position: relative;
+  width: min(100%, 560px);
+  aspect-ratio: 1 / 1;
+  margin: 12px auto 0;
+}
+
+#wheelCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  filter: drop-shadow(0 14px 18px rgba(16, 55, 103, .22));
+}
+
+.wheel-pointer {
+  position: absolute;
+  z-index: 5;
+  top: -4px;
+  left: 50%;
+  width: 42px;
+  height: 52px;
+  transform: translateX(-50%);
+  background: #ff3b30;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: drop-shadow(0 4px 3px rgba(0,0,0,.25));
+}
+
+.wheel-pointer::after {
+  content: '';
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  left: 50%;
+  top: 6px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.45);
+}
+
+#wheelSpinBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 210px;
+  margin: 20px auto 0;
+  padding: 13px 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #007bff, #6f42c1);
+  box-shadow: 0 8px 18px rgba(0, 94, 255, .28);
+  font-size: 16px;
+  font-weight: 700;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+#wheelSpinBtn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 11px 23px rgba(0, 94, 255, .34);
+}
+
+#wheelSpinBtn:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+  box-shadow: none;
+}
+
+.wheel-winner {
+  display: none;
+  margin: 18px auto 0;
+  max-width: 520px;
+  padding: 14px 18px;
+  text-align: center;
+  border: 1px solid #b9ddc3;
+  border-radius: 12px;
+  background: #effbf2;
+  color: #17622d;
+  font-size: 15px;
+}
+
+.wheel-winner.show {
+  display: block;
+  animation: winnerPop .45s ease both;
+}
+
+.wheel-winner strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 24px;
+  color: #0f7a2f;
+}
+
+@keyframes winnerPop {
+  from { opacity: 0; transform: scale(.86) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.confetti-piece {
+  position: fixed;
+  z-index: 99999;
+  top: -24px;
+  width: 10px;
+  height: 18px;
+  pointer-events: none;
+  animation-name: confettiFall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes confettiFall {
+  0% { transform: translate3d(0, -20px, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--drift), 110vh, 0) rotate(900deg); opacity: .9; }
+}
+
+@media (max-width: 600px) {
+  .wheel-section { padding: 18px 12px; }
+  .wheel-header h3 { font-size: 21px; }
+  .wheel-pointer {
+    width: 34px;
+    height: 43px;
+  }
+}
+
 </style>
 
 </head>
@@ -241,7 +413,26 @@ margin-bottom:20px;">
 
   <button onclick="exportExcel()">Export Excel</button>
 
-<!-- 🔽 TAMBAHKAN INI DI BAWAHNYA -->
+<section class="wheel-section" id="wheelSection">
+  <div class="wheel-header">
+    <h3>🎯 Wheel of Names</h3>
+    <p id="wheelInfo">Nama peserta diambil otomatis dari daftar yang sudah absen hari ini.</p>
+  </div>
+
+  <div class="wheel-stage">
+    <div class="wheel-pointer" aria-hidden="true"></div>
+    <canvas id="wheelCanvas" width="700" height="700" aria-label="Roda pemilih nama"></canvas>
+  </div>
+
+  <button id="wheelSpinBtn" type="button">🎡 Putar Roda</button>
+
+  <div class="wheel-winner" id="wheelWinner" aria-live="polite">
+    Nama yang terpilih:
+    <strong id="wheelWinnerName">-</strong>
+  </div>
+</section>
+
+<!-- 🔽 TABEL DATA TERSEMBUNYI -->
 <div class="table-wrapper">
   <table>
     <thead>
@@ -271,6 +462,18 @@ const supabaseClient = createClient(supabaseUrl, supabaseKey);
   let selectedDept = [];
 let allData = [];
 
+/* WHEEL OF NAMES */
+let wheelNames = [];
+let wheelRotation = 0;
+let wheelSpinning = false;
+
+const WHEEL_TAU = Math.PI * 2;
+const wheelColors = [
+  '#007bff', '#6f42c1', '#00a8e8', '#20c997', '#ff8c42',
+  '#e83e8c', '#4f46e5', '#17a2b8', '#ff5d5d', '#2f80ed',
+  '#8e44ad', '#00b894'
+];
+
   function formatDept(dept) {
   if (!dept) return "-";
 
@@ -279,6 +482,8 @@ let allData = [];
 }
   
 document.addEventListener('DOMContentLoaded', () => {
+
+  document.getElementById('wheelSpinBtn').addEventListener('click', spinWheel);
 
   document.querySelectorAll('.dept-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -392,6 +597,7 @@ const { data, error } = await supabaseClient
   allData = data;
 renderChart(data);
 renderNama(data);
+renderWheel(data);
   
 }
 
@@ -507,6 +713,275 @@ if (!allData.length) {
 
   XLSX.writeFile(wb, "data-presensi.xlsx");
 };
+
+
+/* ===== WHEEL OF NAMES ===== */
+function renderWheel(data) {
+  const uniqueNames = new Map();
+
+  data.forEach(item => {
+    const name = String(item.nama || '').trim();
+    if (!name) return;
+
+    const key = name.toLocaleLowerCase('id-ID');
+    if (!uniqueNames.has(key)) uniqueNames.set(key, name);
+  });
+
+  wheelNames = Array.from(uniqueNames.values());
+  wheelRotation = 0;
+
+  const info = document.getElementById('wheelInfo');
+  const spinButton = document.getElementById('wheelSpinBtn');
+  const winnerBox = document.getElementById('wheelWinner');
+
+  info.textContent = wheelNames.length
+    ? `${wheelNames.length} nama siap diundi dari daftar absen hari ini.`
+    : 'Belum ada nama yang bisa diundi hari ini.';
+
+  spinButton.disabled = wheelNames.length === 0;
+  spinButton.innerHTML = '🎡 Putar Roda';
+  winnerBox.classList.remove('show');
+
+  drawWheel();
+}
+
+function drawWheel() {
+  const canvas = document.getElementById('wheelCanvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const center = size / 2;
+  const radius = center - 24;
+
+  ctx.clearRect(0, 0, size, size);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(center, center, radius + 9, 0, WHEEL_TAU);
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(18,59,112,.22)';
+  ctx.shadowBlur = 18;
+  ctx.fill();
+  ctx.restore();
+
+  if (wheelNames.length === 0) {
+    ctx.beginPath();
+    ctx.arc(center, center, radius, 0, WHEEL_TAU);
+    ctx.fillStyle = '#e9eef5';
+    ctx.fill();
+
+    ctx.fillStyle = '#77879b';
+    ctx.font = '700 28px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Belum ada nama', center, center - 10);
+    ctx.font = '18px Arial';
+    ctx.fillText('Silakan isi presensi terlebih dahulu', center, center + 28);
+    return;
+  }
+
+  const arc = WHEEL_TAU / wheelNames.length;
+  const fontSize = wheelNames.length > 30 ? 12 : wheelNames.length > 20 ? 14 : wheelNames.length > 12 ? 16 : 19;
+  const maxChars = wheelNames.length > 30 ? 9 : wheelNames.length > 20 ? 12 : wheelNames.length > 12 ? 16 : 22;
+
+  wheelNames.forEach((name, index) => {
+    const startAngle = wheelRotation + (index * arc) - (Math.PI / 2);
+    const endAngle = startAngle + arc;
+
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.arc(center, center, radius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = wheelColors[index % wheelColors.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.92)';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    const label = name.length > maxChars
+      ? `${name.slice(0, maxChars - 1)}…`
+      : name;
+
+    ctx.save();
+    ctx.translate(center, center);
+    ctx.rotate(startAngle + (arc / 2));
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `700 ${fontSize}px Arial`;
+    ctx.shadowColor = 'rgba(0,0,0,.35)';
+    ctx.shadowBlur = 3;
+    ctx.fillText(label, radius - 34, 0);
+    ctx.restore();
+  });
+
+  ctx.beginPath();
+  ctx.arc(center, center, radius, 0, WHEEL_TAU);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 7;
+  ctx.stroke();
+
+  drawWheelCenter(ctx, center);
+}
+
+function drawWheelCenter(ctx, center) {
+  const gradient = ctx.createRadialGradient(center - 18, center - 20, 5, center, center, 74);
+  gradient.addColorStop(0, '#ffffff');
+  gradient.addColorStop(1, '#dceaff');
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(center, center, 72, 0, WHEEL_TAU);
+  ctx.fillStyle = gradient;
+  ctx.shadowColor = 'rgba(0,0,0,.25)';
+  ctx.shadowBlur = 12;
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 7;
+  ctx.stroke();
+
+  ctx.fillStyle = '#0759b8';
+  ctx.font = '900 29px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('DOR', center, center - 7);
+  ctx.font = '700 13px Arial';
+  ctx.fillStyle = '#5a6f87';
+  ctx.fillText('SPIN', center, center + 22);
+  ctx.restore();
+}
+
+function secureRandomIndex(length) {
+  if (window.crypto && window.crypto.getRandomValues) {
+    const randomValue = new Uint32Array(1);
+    window.crypto.getRandomValues(randomValue);
+    return randomValue[0] % length;
+  }
+
+  return Math.floor(Math.random() * length);
+}
+
+function spinWheel() {
+  if (wheelSpinning) return;
+
+  if (!wheelNames.length) {
+    Swal.fire({
+      icon: 'info',
+      title: 'Belum Ada Peserta',
+      text: 'Belum ada nama dari daftar absen hari ini.'
+    });
+    return;
+  }
+
+  wheelSpinning = true;
+
+  const spinButton = document.getElementById('wheelSpinBtn');
+  const winnerBox = document.getElementById('wheelWinner');
+  const winnerNameElement = document.getElementById('wheelWinnerName');
+
+  spinButton.disabled = true;
+  spinButton.innerHTML = '⏳ Sedang Memutar...';
+  winnerBox.classList.remove('show');
+
+  const winnerIndex = secureRandomIndex(wheelNames.length);
+  const arc = WHEEL_TAU / wheelNames.length;
+  const currentNormalized = ((wheelRotation % WHEEL_TAU) + WHEEL_TAU) % WHEEL_TAU;
+  const desiredNormalized = ((-(winnerIndex + 0.5) * arc) % WHEEL_TAU + WHEEL_TAU) % WHEEL_TAU;
+  const extraTurns = 7 + secureRandomIndex(4);
+  const angularDistance = ((desiredNormalized - currentNormalized + WHEEL_TAU) % WHEEL_TAU)
+    + (extraTurns * WHEEL_TAU);
+
+  const startRotation = wheelRotation;
+  const endRotation = startRotation + angularDistance;
+  const duration = 5200;
+  const startTime = performance.now();
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 4);
+
+    wheelRotation = startRotation + ((endRotation - startRotation) * eased);
+    drawWheel();
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+      return;
+    }
+
+    wheelRotation = endRotation;
+    drawWheel();
+    wheelSpinning = false;
+
+    const winnerName = wheelNames[winnerIndex];
+    winnerNameElement.textContent = winnerName;
+    winnerBox.classList.add('show');
+
+    spinButton.disabled = false;
+    spinButton.innerHTML = '🔄 Putar Lagi';
+
+    playWinnerSound();
+    launchConfetti();
+
+    Swal.fire({
+      icon: 'success',
+      title: '🎉 Nama Terpilih',
+      text: winnerName,
+      confirmButtonText: 'Mantap!',
+      confirmButtonColor: '#007bff'
+    });
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function playWinnerSound() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const audioContext = new AudioContextClass();
+    const notes = [523.25, 659.25, 783.99];
+
+    notes.forEach((frequency, index) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const startAt = audioContext.currentTime + (index * 0.12);
+
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.18, startAt + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.35);
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + 0.38);
+    });
+  } catch (error) {
+    console.warn('Audio tidak dapat diputar:', error);
+  }
+}
+
+function launchConfetti() {
+  const total = 70;
+
+  for (let i = 0; i < total; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = `${Math.random() * 100}vw`;
+    piece.style.background = wheelColors[i % wheelColors.length];
+    piece.style.animationDuration = `${2.7 + Math.random() * 1.8}s`;
+    piece.style.animationDelay = `${Math.random() * 0.45}s`;
+    piece.style.setProperty('--drift', `${-140 + Math.random() * 280}px`);
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    document.body.appendChild(piece);
+
+    setTimeout(() => piece.remove(), 5200);
+  }
+}
 
 /* 👇 TAMBAHKAN INI DI PALING BAWAH SCRIPT */
 function parseDept(dept) {
