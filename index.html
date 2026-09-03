@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -650,6 +651,61 @@ th, td { padding: 10px; border: 1px solid #ddd; }
   line-height: 1.5;
 }
 
+.wheel-settings-btn {
+  position: absolute;
+  z-index: 3;
+  top: 18px;
+  right: 18px;
+  width: 38px;
+  height: 38px;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #6b5bb3;
+  background: rgba(255,255,255,.85);
+  box-shadow: 0 6px 16px rgba(60,40,120,.14), inset 0 0 0 1px #e6ddfb;
+  font-size: 16px;
+}
+
+.wheel-settings-btn:hover:not(:disabled) {
+  transform: translateY(-1px) rotate(25deg);
+  background: #fff;
+}
+
+.wheel-manual {
+  position: relative;
+  z-index: 1;
+  display: none;
+  max-width: 320px;
+  margin: 16px auto 0;
+  text-align: left;
+}
+
+.wheel-manual.show {
+  display: block;
+  animation: winnerPop .3s ease both;
+}
+
+.wheel-manual label {
+  display: block;
+  margin-bottom: 6px;
+  color: #59687d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wheel-manual label span {
+  color: #9aa7b9;
+  font-weight: 600;
+}
+
+.wheel-manual input {
+  min-height: 42px;
+  background: #fff;
+}
+
 .wheel-stage {
   position: relative;
   width: min(100%, 570px);
@@ -796,6 +852,7 @@ th, td { padding: 10px; border: 1px solid #ddd; }
   .wheel-section { padding: 22px 12px; }
   .wheel-header h3 { font-size: 21px; }
   .wheel-pointer { width: 34px; height: 43px; }
+  .wheel-manual { max-width: 100%; }
 }
 
 @media (max-width: 380px) {
@@ -946,10 +1003,16 @@ th, td { padding: 10px; border: 1px solid #ddd; }
     </section>
 
     <section class="wheel-section" id="wheelSection">
+      <button type="button" id="wheelSettingsBtn" class="wheel-settings-btn" title="Pengaturan Admin">⚙️</button>
       <div class="wheel-header">
         <div class="wheel-badge">Random Picker</div>
         <h3>🎯 Wheel of Names</h3>
         <p id="wheelInfo">Nama peserta diambil otomatis dari daftar yang sudah absen hari ini.</p>
+      </div>
+      <div class="wheel-manual" id="wheelManualPanel">
+        <label for="wheelManualName">Atur hasil spin <span>(opsional — kosongkan untuk acak)</span></label>
+        <input id="wheelManualName" list="wheelManualNameList" placeholder="Ketik nama peserta untuk memastikan hasil">
+        <datalist id="wheelManualNameList"></datalist>
       </div>
       <div class="wheel-stage">
         <div class="wheel-pointer" aria-hidden="true"></div>
@@ -997,6 +1060,9 @@ const wheelColors = [
   '#8e44ad', '#00b894'
 ];
 
+/* Ganti PIN ini sesuai keinginan Anda */
+const WHEEL_ADMIN_PIN = '174879';
+
   function formatDept(dept) {
   if (!dept) return "-";
 
@@ -1009,6 +1075,11 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDateTime();
   setInterval(updateDateTime, 1000);
   document.getElementById('wheelSpinBtn').addEventListener('click', spinWheel);
+
+  const wheelSettingsBtn = document.getElementById('wheelSettingsBtn');
+  if (wheelSettingsBtn) {
+    wheelSettingsBtn.addEventListener('click', toggleWheelManualPanel);
+  }
 
   document.querySelectorAll('.dept-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -1352,10 +1423,17 @@ function renderWheel(data) {
   const info = document.getElementById('wheelInfo');
   const spinButton = document.getElementById('wheelSpinBtn');
   const winnerBox = document.getElementById('wheelWinner');
+  const manualList = document.getElementById('wheelManualNameList');
 
   info.textContent = wheelNames.length
     ? `${wheelNames.length} nama siap diundi dari daftar absen hari ini.`
     : 'Belum ada nama yang bisa diundi hari ini.';
+
+  if (manualList) {
+    manualList.innerHTML = wheelNames
+      .map(n => `<option value="${escapeHTML(n)}"></option>`)
+      .join('');
+  }
 
   spinButton.disabled = wheelNames.length === 0;
   spinButton.innerHTML = '🎡 Putar Roda';
@@ -1471,6 +1549,39 @@ function drawWheelCenter(ctx, center) {
   ctx.restore();
 }
 
+/* Buka/tutup panel "atur hasil spin" dengan proteksi PIN */
+function toggleWheelManualPanel() {
+  const panel = document.getElementById('wheelManualPanel');
+  if (!panel) return;
+
+  if (panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    return;
+  }
+
+  Swal.fire({
+    title: 'Masukkan PIN Admin',
+    input: 'password',
+    inputPlaceholder: 'PIN',
+    inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
+    showCancelButton: true,
+    confirmButtonText: 'Buka',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#6f42c1',
+    preConfirm: (value) => {
+      if (value !== WHEEL_ADMIN_PIN) {
+        Swal.showValidationMessage('PIN salah, coba lagi');
+        return false;
+      }
+      return true;
+    }
+  }).then(result => {
+    if (result.isConfirmed) {
+      panel.classList.add('show');
+    }
+  });
+}
+
 function secureRandomIndex(length) {
   if (window.crypto && window.crypto.getRandomValues) {
     const randomValue = new Uint32Array(1);
@@ -1493,17 +1604,41 @@ function spinWheel() {
     return;
   }
 
-  wheelSpinning = true;
-
   const spinButton = document.getElementById('wheelSpinBtn');
   const winnerBox = document.getElementById('wheelWinner');
   const winnerNameElement = document.getElementById('wheelWinnerName');
+  const manualInput = document.getElementById('wheelManualName');
 
+  /* Cek apakah hasil spin diatur manual lewat kolom nama */
+  const manualValue = manualInput ? manualInput.value.trim() : '';
+  let winnerIndex;
+  let isManualPick = false;
+
+  if (manualValue) {
+    const matchIndex = wheelNames.findIndex(
+      n => n.toLocaleLowerCase('id-ID') === manualValue.toLocaleLowerCase('id-ID')
+    );
+
+    if (matchIndex === -1) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Nama Tidak Ditemukan',
+        text: `"${manualValue}" tidak ada di daftar peserta hari ini. Pilih dari saran atau kosongkan kolom untuk acak.`
+      });
+      return;
+    }
+
+    winnerIndex = matchIndex;
+    isManualPick = true;
+  } else {
+    winnerIndex = secureRandomIndex(wheelNames.length);
+  }
+
+  wheelSpinning = true;
   spinButton.disabled = true;
   spinButton.innerHTML = '⏳ Sedang Memutar...';
   winnerBox.classList.remove('show');
 
-  const winnerIndex = secureRandomIndex(wheelNames.length);
   const arc = WHEEL_TAU / wheelNames.length;
   const currentNormalized = ((wheelRotation % WHEEL_TAU) + WHEEL_TAU) % WHEEL_TAU;
   const desiredNormalized = ((-(winnerIndex + 0.5) * arc) % WHEEL_TAU + WHEEL_TAU) % WHEEL_TAU;
@@ -1539,6 +1674,11 @@ function spinWheel() {
 
     spinButton.disabled = false;
     spinButton.innerHTML = '🔄 Putar Lagi';
+
+    /* Setelah dipakai, kosongkan kolom manual supaya spin berikutnya kembali acak */
+    if (isManualPick && manualInput) {
+      manualInput.value = '';
+    }
 
     playWinnerSound();
     launchConfetti();
