@@ -1,150 +1,2023 @@
-window.exportExcel = async function () {
-  const exportButton = document.querySelector('.btn-secondary');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Presensi DOR | PT Kobe Boga Utama</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  try {
-    if (exportButton) {
-      exportButton.disabled = true;
-      exportButton.innerHTML = '<span>⏳</span> Mengambil Data...';
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    :root {
+      --primary: #1268e8;
+      --primary-dark: #0748ad;
+      --primary-soft: #eaf3ff;
+      --accent: #7c3aed;
+      --success: #16a065;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --ink: #152238;
+      --muted: #6b7a90;
+      --line: #e5ebf3;
+      --surface: rgba(255,255,255,.93);
+      --shadow: 0 18px 50px rgba(26, 63, 114, .12);
     }
 
-    Swal.fire({
-      title: 'Menyiapkan Data',
-      text: 'Sedang mengambil seluruh data presensi...',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 28px 18px 46px;
+      overflow-x: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(18,104,232,.16), transparent 28%),
+        radial-gradient(circle at 92% 4%, rgba(124,58,237,.13), transparent 27%),
+        linear-gradient(145deg, #eef5ff 0%, #f7f9fd 42%, #f4f0ff 100%);
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      z-index: -1;
+      border-radius: 50%;
+      filter: blur(6px);
+      pointer-events: none;
+    }
+
+    body::before {
+      width: 260px;
+      height: 260px;
+      left: -95px;
+      bottom: 8%;
+      background: rgba(18,104,232,.08);
+    }
+
+    body::after {
+      width: 320px;
+      height: 320px;
+      right: -130px;
+      top: 32%;
+      background: rgba(124,58,237,.07);
+    }
+
+    .container {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+    }
+
+    .app-shell {
+      display: grid;
+      gap: 22px;
+    }
+
+    .header-app {
+      position: relative;
+      overflow: hidden;
+      min-height: 220px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 26px;
+      padding: 36px 40px;
+      border: 1px solid rgba(255,255,255,.38);
+      border-radius: 28px;
+      color: #fff;
+      background:
+        linear-gradient(120deg, rgba(0,32,91,.18), rgba(61,16,135,.16)),
+        linear-gradient(135deg, #0b63dc 0%, #174fb6 50%, #7338d2 100%);
+      box-shadow: 0 24px 60px rgba(25, 73, 157, .28);
+    }
+
+    .header-app::before,
+    .header-app::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.15);
+    }
+
+    .header-app::before {
+      width: 360px;
+      height: 360px;
+      top: -205px;
+      right: -55px;
+      box-shadow: 0 0 0 42px rgba(255,255,255,.035), 0 0 0 88px rgba(255,255,255,.025);
+    }
+
+    .header-app::after {
+      width: 210px;
+      height: 210px;
+      left: 44%;
+      bottom: -165px;
+      box-shadow: 0 0 0 38px rgba(255,255,255,.03);
+    }
+
+    .header-copy,
+    .header-status { position: relative; z-index: 1; }
+
+    .brand-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(10px);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .brand-kicker::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #6df1ad;
+      box-shadow: 0 0 0 5px rgba(109,241,173,.16);
+    }
+
+    .header-app h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 56px);
+      line-height: 1;
+      letter-spacing: -.045em;
+    }
+
+    .header-app h2 {
+      margin: 12px 0 5px;
+      font-size: clamp(18px, 2.2vw, 24px);
+      font-weight: 750;
+    }
+
+    .header-app p {
+      margin: 0;
+      color: rgba(255,255,255,.78);
+      font-size: 14px;
+    }
+
+    .header-status {
+      min-width: 230px;
+      padding: 22px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 22px;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(15px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+    }
+
+    .status-label {
+      color: rgba(255,255,255,.72);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    #liveTime {
+      display: block;
+      margin: 5px 0 2px;
+      font-size: 34px;
+      font-weight: 850;
+      letter-spacing: -.04em;
+    }
+
+    #liveDate {
+      color: rgba(255,255,255,.82);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .card {
+      border: 1px solid rgba(222,231,243,.95);
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .card-inner { padding: 28px; }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .section-heading h3 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -.025em;
+    }
+
+    .section-heading p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .section-icon {
+      flex: 0 0 auto;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      background: linear-gradient(135deg, var(--primary-soft), #f1eaff);
+      font-size: 22px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .form-group { min-width: 0; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label.field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 8px;
+      color: #34435a;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .required { color: var(--danger); }
+    .field-hint { color: #9aa7b9; font-size: 11px; font-weight: 600; }
+
+    input, select {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border: 1px solid #dce4ef;
+      border-radius: 13px;
+      outline: none;
+      background: #fbfdff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease, background .2s ease;
+    }
+
+    input::placeholder { color: #a5b0bf; }
+
+    input:focus, select:focus {
+      border-color: #61a2f8;
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(18,104,232,.11);
+    }
+
+    .dept-wrap {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px dashed #dce5f0;
+    }
+
+    .dept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .dept-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 45px;
+      padding: 10px 36px 10px 13px;
+      overflow: hidden;
+      border: 1px solid #e2e9f3;
+      border-radius: 13px;
+      background: #f7f9fc;
+      color: #41516a;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13px;
+      font-weight: 720;
+      transition: transform .2s ease, border-color .2s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
+    }
+
+    .dept-item::after {
+      content: '✓';
+      position: absolute;
+      right: 12px;
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #d1dbea;
+      border-radius: 50%;
+      color: transparent;
+      background: #fff;
+      font-size: 12px;
+      transition: all .2s ease;
+    }
+
+    .dept-item:hover {
+      transform: translateY(-2px);
+      border-color: #a9c9f7;
+      box-shadow: 0 8px 18px rgba(28,89,171,.08);
+    }
+
+    .dept-item.active {
+      border-color: transparent;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #6243dd);
+      box-shadow: 0 10px 22px rgba(18,104,232,.22);
+    }
+
+    .dept-item.active::after {
+      border-color: rgba(255,255,255,.45);
+      color: var(--primary);
+      background: #fff;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    button {
+      min-height: 44px;
+      padding: 11px 19px;
+      border: 0;
+      border-radius: 12px;
+      color: #fff;
+      background: var(--primary);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 780;
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+
+    button:hover:not(:disabled) { transform: translateY(-2px); }
+    button:active:not(:disabled) { transform: translateY(0); }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-width: 170px;
+      background: linear-gradient(135deg, var(--primary), #5d43db);
+      box-shadow: 0 10px 22px rgba(18,104,232,.24);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--primary-dark);
+      background: #edf5ff;
+      box-shadow: inset 0 0 0 1px #d5e6ff;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 126px;
+      padding: 20px;
+      border: 1px solid #e4ebf4;
+      border-radius: 20px;
+      background: rgba(255,255,255,.88);
+      box-shadow: 0 14px 34px rgba(38,70,113,.08);
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      right: -34px;
+      bottom: -40px;
+      border-radius: 50%;
+      background: var(--stat-soft, #eaf3ff);
+    }
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .stat-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      background: var(--stat-soft, #eaf3ff);
+      font-size: 17px;
+    }
+
+    .stat-value {
+      position: relative;
+      z-index: 1;
+      margin-top: 10px;
+      font-size: 34px;
+      font-weight: 850;
+      line-height: 1;
+      letter-spacing: -.045em;
+    }
+
+    .stat-note {
+      position: relative;
+      z-index: 1;
+      margin-top: 7px;
+      color: #8a97aa;
+      font-size: 11px;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(300px, .8fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .chart-box {
+      position: relative;
+      height: 390px;
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .legend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid #e2e9f2;
+      border-radius: 999px;
+      background: #fff;
+      color: #59687d;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .attendance-panel .card-inner { padding-bottom: 22px; }
+
+    #listNama {
+      max-height: 375px;
+      min-height: 150px;
+      overflow: auto;
+      display: flex;
+      align-content: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 4px 5px 8px 0;
+    }
+
+    .name-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      max-width: 100%;
+      padding: 8px 11px 8px 8px;
+      border: 1px solid #dbe8fa;
+      border-radius: 999px;
+      color: #215084;
+      background: linear-gradient(135deg, #f4f9ff, #eef4ff);
+      font-size: 12px;
+      font-weight: 730;
+      box-shadow: 0 5px 12px rgba(24,87,170,.06);
+    }
+
+    .name-avatar {
+      width: 25px;
+      height: 25px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      font-size: 10px;
+      font-weight: 850;
+    }
+
+    .empty-state {
+      width: 100%;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 8px;
+      min-height: 145px;
+      padding: 20px;
+      border: 1px dashed #d6dfeb;
+      border-radius: 16px;
+      color: var(--muted);
+      background: #fafcff;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .empty-state span { font-size: 30px; }
+
+    .panel-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid #edf1f6;
+    }
+
+    .panel-footer small { color: #8a97aa; }
+
+    .table-wrapper {
+      display: none;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 600px;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    th, td { padding: 10px; border: 1px solid #ddd; }
+
+    /* ===== WHEEL OF NAMES ===== */
+    .wheel-section {
+      position: relative;
+      overflow: hidden;
+      padding: 30px;
+      border: 1px solid rgba(214,226,243,.95);
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(18,104,232,.15), transparent 30%),
+        radial-gradient(circle at 90% 85%, rgba(124,58,237,.14), transparent 34%),
+        rgba(255,255,255,.92);
+      box-shadow: var(--shadow);
+    }
+
+    .wheel-section::before {
+      content: '';
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      top: -120px;
+      right: -85px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(18,104,232,.17), rgba(124,58,237,.11));
+      pointer-events: none;
+    }
+
+    .wheel-header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .wheel-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      margin-bottom: 10px;
+      border-radius: 999px;
+      color: #5e35b1;
+      background: #f0eaff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .wheel-header h3 {
+      margin: 0 0 6px;
+      color: #17365f;
+      font-size: 25px;
+      letter-spacing: -.025em;
+    }
+
+    .wheel-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .wheel-settings-btn {
+      position: absolute;
+      z-index: 3;
+      top: 18px;
+      right: 18px;
+      width: 38px;
+      height: 38px;
+      min-height: 0;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #6b5bb3;
+      background: rgba(255,255,255,.85);
+      box-shadow: 0 6px 16px rgba(60,40,120,.14), inset 0 0 0 1px #e6ddfb;
+      font-size: 16px;
+    }
+
+    .wheel-settings-btn:hover:not(:disabled) {
+      transform: translateY(-1px) rotate(25deg);
+      background: #fff;
+    }
+
+    .wheel-manual {
+      position: relative;
+      z-index: 1;
+      display: none;
+      max-width: 320px;
+      margin: 16px auto 0;
+      text-align: left;
+    }
+
+    .wheel-manual.show {
+      display: block;
+      animation: winnerPop .3s ease both;
+    }
+
+    .wheel-manual label {
+      display: block;
+      margin-bottom: 6px;
+      color: #59687d;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .wheel-manual label span {
+      color: #9aa7b9;
+      font-weight: 600;
+    }
+
+    .wheel-manual input {
+      min-height: 42px;
+      background: #fff;
+    }
+
+    .wheel-stage {
+      position: relative;
+      width: min(100%, 570px);
+      aspect-ratio: 1 / 1;
+      margin: 14px auto 0;
+    }
+
+    #wheelCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      filter: drop-shadow(0 18px 22px rgba(16,55,103,.24));
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      z-index: 5;
+      top: -5px;
+      left: 50%;
+      width: 44px;
+      height: 54px;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, #ff5e5e, #e62b35);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      filter: drop-shadow(0 5px 4px rgba(0,0,0,.25));
+    }
+
+    .wheel-pointer::after {
+      content: '';
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      left: 50%;
+      top: 7px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.45);
+    }
+
+    #wheelSpinBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-width: 220px;
+      margin: 22px auto 0;
+      padding: 13px 25px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 10px 23px rgba(31,81,190,.29);
+      font-size: 15px;
+    }
+
+    #wheelSpinBtn:hover:not(:disabled) {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 13px 27px rgba(31,81,190,.35);
+    }
+
+    #wheelSpinBtn:disabled { box-shadow: none; }
+
+    .wheel-winner {
+      display: none;
+      max-width: 520px;
+      margin: 18px auto 0;
+      padding: 15px 18px;
+      border: 1px solid #b9ddc3;
+      border-radius: 15px;
+      color: #17622d;
+      background: #effbf2;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .wheel-winner.show {
+      display: block;
+      animation: winnerPop .45s ease both;
+    }
+
+    .wheel-winner strong {
+      display: block;
+      margin-top: 4px;
+      color: #0f7a2f;
+      font-size: 24px;
+    }
+
+    @keyframes winnerPop {
+      from { opacity: 0; transform: scale(.86) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .confetti-piece {
+      position: fixed;
+      z-index: 99999;
+      top: -24px;
+      width: 10px;
+      height: 18px;
+      pointer-events: none;
+      animation-name: confettiFall;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translate3d(0,-20px,0) rotate(0deg); opacity: 1; }
+      100% { transform: translate3d(var(--drift),110vh,0) rotate(900deg); opacity: .9; }
+    }
+
+    .footer-note {
+      padding: 5px 10px 0;
+      color: #8492a6;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    @media (max-width: 900px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .dashboard-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .header-app { grid-template-columns: 1fr; }
+      .header-status { width: min(100%, 360px); }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 13px 10px 30px; }
+      .app-shell { gap: 14px; }
+      .header-app { min-height: auto; padding: 27px 22px; border-radius: 22px; }
+      .header-app h1 { font-size: 38px; }
+      .header-status { min-width: 0; padding: 17px; }
+      #liveTime { font-size: 29px; }
+      .card, .wheel-section { border-radius: 20px; }
+      .card-inner { padding: 20px 16px; }
+      .section-heading h3 { font-size: 19px; }
+      .form-grid { grid-template-columns: 1fr; gap: 13px; }
+      .form-group.full { grid-column: auto; }
+      .dept-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+      .dept-item { padding: 10px 32px 10px 10px; font-size: 12px; }
+      .form-actions, .panel-footer { align-items: stretch; flex-direction: column; }
+      .btn-primary, .btn-secondary, button { width: 100%; }
+      .dashboard-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+      .stat-card { min-height: 115px; padding: 16px; border-radius: 17px; }
+      .stat-value { font-size: 29px; }
+      .chart-box { height: 330px; }
+      .wheel-section { padding: 22px 12px; }
+      .wheel-header h3 { font-size: 21px; }
+      .wheel-pointer { width: 34px; height: 43px; }
+      .wheel-manual { max-width: 100%; }
+    }
+
+    @media (max-width: 380px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .dept-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <main class="app-shell">
+
+    <header class="header-app">
+      <div class="header-copy">
+        <div class="brand-kicker">Sistem Presensi Digital</div>
+        <h1>PRESENSI DOR</h1>
+        <h2>PT Kobe Boga Utama</h2>
+        <p>Factory Bojonegoro · Attendance Dashboard</p>
+      </div>
+
+      <div class="header-status">
+        <span class="status-label">Waktu sekarang</span>
+        <strong id="liveTime">--:--:--</strong>
+        <div id="liveDate">Memuat tanggal...</div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="card-inner">
+        <div class="section-heading">
+          <div>
+            <h3>Form Presensi</h3>
+            <p>Lengkapi data diri, pilih departemen, lalu simpan kehadiran Anda.</p>
+          </div>
+          <div class="section-icon">✍️</div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="field-label" for="nama">
+              <span>Nama Lengkap <span class="required">*</span></span>
+            </label>
+            <input id="nama" autocomplete="name" placeholder="Contoh: Regi">
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="nik">
+              <span>NIK <span class="required">*</span></span>
+              <span class="field-hint">Wajib diisi</span>
+            </label>
+            <input id="nik" inputmode="numeric" autocomplete="off" placeholder="Masukkan NIK">
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="jabatan">Jabatan</label>
+            <input id="jabatan" autocomplete="organization-title" placeholder="Contoh: SPV Produksi">
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="status">Status Kehadiran</label>
+            <select id="status">
+              <option value="Hadir">Hadir</option>
+              <option value="Izin">Izin</option>
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label class="field-label" for="keterangan">
+              <span>Keterangan</span>
+              <span class="field-hint">Opsional</span>
+            </label>
+            <input id="keterangan" placeholder="Tambahkan catatan bila diperlukan">
+          </div>
+        </div>
+
+        <div class="dept-wrap">
+          <label class="field-label">
+            <span>Departemen</span>
+            <span class="field-hint">Bisa pilih lebih dari satu</span>
+          </label>
+
+          <div class="dept-grid">
+            <div class="dept-item" data-value="Manex">Manex</div>
+            <div class="dept-item" data-value="Produksi">Produksi</div>
+            <div class="dept-item" data-value="Maintenance">Maintenance</div>
+            <div class="dept-item" data-value="Sparepart">Sparepart</div>
+            <div class="dept-item" data-value="Utility">Utility</div>
+            <div class="dept-item" data-value="Warehouse">Warehouse</div>
+            <div class="dept-item" data-value="RMPM">RMPM</div>
+            <div class="dept-item" data-value="QC">QC</div>
+            <div class="dept-item" data-value="GA">GA</div>
+            <div class="dept-item" data-value="HC">HC</div>
+            <div class="dept-item" data-value="Project">Project</div>
+            <div class="dept-item" data-value="HSE">HSE</div>
+            <div class="dept-item" data-value="RND">RND</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-primary" id="saveButton" onclick="simpan()">
+            <span>✓</span> Simpan Presensi
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Ringkasan presensi hari ini">
+      <article class="stat-card" style="--stat-soft:#eaf3ff">
+        <div class="stat-top"><span>Total Presensi</span><span class="stat-icon">👥</span></div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-note">Data masuk hari ini</div>
+      </article>
+
+      <article class="stat-card" style="--stat-soft:#e9f9f1">
+        <div class="stat-top"><span>Hadir</span><span class="stat-icon">✓</span></div>
+        <div class="stat-value" id="statHadir">0</div>
+        <div class="stat-note">Karyawan hadir</div>
+      </article>
+
+      <article class="stat-card" style="--stat-soft:#fff5df">
+        <div class="stat-top"><span>Izin</span><span class="stat-icon">📝</span></div>
+        <div class="stat-value" id="statIzin">0</div>
+        <div class="stat-note">Karyawan berizin</div>
+      </article>
+
+      <article class="stat-card" style="--stat-soft:#f1eaff">
+        <div class="stat-top"><span>Departemen Aktif</span><span class="stat-icon">🏢</span></div>
+        <div class="stat-value" id="statDept">0</div>
+        <div class="stat-note">Departemen terwakili</div>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="card">
+        <div class="card-inner">
+          <div class="section-heading">
+            <div>
+              <h3>Grafik Kehadiran</h3>
+              <p>Rekap kehadiran hari ini berdasarkan departemen.</p>
+            </div>
+
+            <div class="legend-row">
+              <span class="legend-pill"><span class="legend-dot" style="background:#378add"></span>Hadir</span>
+              <span class="legend-pill"><span class="legend-dot" style="background:#EF9F27"></span>Izin</span>
+              <span class="legend-pill"><span class="legend-dot" style="background:#E24B4A"></span>Alpha</span>
+            </div>
+          </div>
+
+          <div class="chart-box">
+            <canvas id="chartDept"></canvas>
+          </div>
+        </div>
+      </article>
+
+      <article class="card attendance-panel">
+        <div class="card-inner">
+          <div class="section-heading">
+            <div>
+              <h3>Sudah Absen Hari Ini</h3>
+              <p id="attendanceSummary">Daftar akan diperbarui otomatis.</p>
+            </div>
+            <div class="section-icon">✅</div>
+          </div>
+
+          <div id="listNama"></div>
+
+          <div class="panel-footer">
+            <small>Data sesuai presensi hari ini</small>
+            <button class="btn-secondary" id="exportButton" onclick="exportExcel()">
+              <span>⬇</span> Export Semua Data
+            </button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="wheel-section" id="wheelSection">
+      <button type="button" id="wheelSettingsBtn" class="wheel-settings-btn" title="Pengaturan Admin">⚙️</button>
+
+      <div class="wheel-header">
+        <div class="wheel-badge">Random Picker</div>
+        <h3>🎯 Wheel of Names</h3>
+        <p id="wheelInfo">Nama peserta diambil otomatis dari daftar yang sudah absen hari ini.</p>
+      </div>
+
+      <div class="wheel-manual" id="wheelManualPanel">
+        <label for="wheelManualName">
+          Atur hasil spin <span>(opsional — kosongkan untuk acak)</span>
+        </label>
+        <input id="wheelManualName" list="wheelManualNameList" placeholder="Ketik nama peserta untuk memastikan hasil">
+        <datalist id="wheelManualNameList"></datalist>
+      </div>
+
+      <div class="wheel-stage">
+        <div class="wheel-pointer" aria-hidden="true"></div>
+        <canvas id="wheelCanvas" width="700" height="700" aria-label="Roda pemilih nama"></canvas>
+      </div>
+
+      <button id="wheelSpinBtn" type="button">🎡 Putar Roda</button>
+
+      <div class="wheel-winner" id="wheelWinner" aria-live="polite">
+        Nama yang terpilih:
+        <strong id="wheelWinnerName">-</strong>
+      </div>
+    </section>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>NIK</th>
+            <th>Jabatan</th>
+            <th>Departemen</th>
+            <th>Status</th>
+            <th>Waktu</th>
+          </tr>
+        </thead>
+        <tbody id="dataPresensi"></tbody>
+      </table>
+    </div>
+
+    <footer class="footer-note">
+      Presensi DOR · PT Kobe Boga Utama · Factory Bojonegoro
+    </footer>
+
+  </main>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  const supabaseUrl = 'https://qasbqrteajokqhapjutf.supabase.co';
+  const supabaseKey = 'sb_publishable_xVuvGAJxAB7lb7AUZ-Szrw_EOQY8e5j';
+  const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+  let chart;
+  let selectedDept = [];
+  let allData = [];
+
+  /* WHEEL OF NAMES */
+  let wheelNames = [];
+  let wheelRotation = 0;
+  let wheelSpinning = false;
+
+  const WHEEL_TAU = Math.PI * 2;
+  const wheelColors = [
+    '#007bff', '#6f42c1', '#00a8e8', '#20c997', '#ff8c42',
+    '#e83e8c', '#4f46e5', '#17a2b8', '#ff5d5d', '#2f80ed',
+    '#8e44ad', '#00b894'
+  ];
+
+  /* Ganti PIN ini sesuai keinginan Anda */
+  const WHEEL_ADMIN_PIN = '174879';
+
+  function formatDept(dept) {
+    if (!dept) return "-";
+    const arr = parseDept(dept);
+    return arr.join(" • ");
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    document.getElementById('wheelSpinBtn').addEventListener('click', spinWheel);
+
+    const wheelSettingsBtn = document.getElementById('wheelSettingsBtn');
+    if (wheelSettingsBtn) {
+      wheelSettingsBtn.addEventListener('click', toggleWheelManualPanel);
+    }
+
+    document.querySelectorAll('.dept-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const value = item.dataset.value;
+
+        if (selectedDept.includes(value)) {
+          selectedDept = selectedDept.filter(v => v !== value);
+          item.classList.remove('active');
+        } else {
+          selectedDept.push(value);
+          item.classList.add('active');
+        }
+      });
     });
+  });
 
-    // Ambil seluruh data dengan pagination
-    // Supabase biasanya membatasi jumlah row per request
-    const pageSize = 1000;
-    let from = 0;
-    let seluruhData = [];
+  function updateDateTime() {
+    const now = new Date();
+    const timeElement = document.getElementById('liveTime');
+    const dateElement = document.getElementById('liveDate');
 
-    while (true) {
-      const { data, error } = await supabaseClient
-        .from('presensi')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(from, from + pageSize - 1);
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        break;
-      }
-
-      seluruhData = seluruhData.concat(data);
-
-      // Jika hasil kurang dari 1000 berarti sudah halaman terakhir
-      if (data.length < pageSize) {
-        break;
-      }
-
-      from += pageSize;
+    if (timeElement) {
+      timeElement.textContent = now.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
     }
 
-    if (!seluruhData.length) {
+    if (dateElement) {
+      dateElement.textContent = now.toLocaleDateString('id-ID', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+  }
+
+  /* SIMPAN */
+  window.simpan = async function () {
+    const saveButton = document.getElementById('saveButton');
+
+    if (
+      !document.getElementById('nama').value.trim() ||
+      !document.getElementById('nik').value.trim()
+    ) {
       Swal.fire({
-        icon: 'info',
-        title: 'Data Kosong',
-        text: 'Belum ada data presensi untuk diexport.'
+        icon: 'warning',
+        title: 'Data Belum Lengkap',
+        text: 'Nama dan NIK wajib diisi'
       });
       return;
     }
 
-    // Format data untuk Excel
-    const exportData = seluruhData.map((item, index) => {
-      const waktu = item.created_at
-        ? new Date(item.created_at)
-        : null;
+    const data = {
+      nama: document.getElementById('nama').value.trim(),
+      nik: document.getElementById('nik').value.trim(),
+      jabatan: document.getElementById('jabatan').value.trim(),
+      departemen: selectedDept.length ? selectedDept : [],
+      status: document.getElementById('status').value,
+      keterangan: document.getElementById('keterangan').value.trim()
+    };
 
-      return {
-        No: index + 1,
-        Tanggal: waktu
-          ? waktu.toLocaleDateString('id-ID')
-          : '-',
-        Waktu: waktu
-          ? waktu.toLocaleTimeString('id-ID', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit'
-            })
-          : '-',
-        Nama: item.nama || '-',
-        NIK: item.nik || '-',
-        Jabatan: item.jabatan || '-',
-        Departemen: formatDept(item.departemen),
-        Status: item.status || '-',
-        Keterangan: item.keterangan || '-'
-      };
-    });
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<span>⏳</span> Menyimpan...';
 
-    // Buat worksheet
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    const { error } = await supabaseClient
+      .from('presensi')
+      .insert([data]);
 
-    // Atur lebar kolom
-    ws['!cols'] = [
-      { wch: 6 },   // No
-      { wch: 14 },  // Tanggal
-      { wch: 12 },  // Waktu
-      { wch: 28 },  // Nama
-      { wch: 18 },  // NIK
-      { wch: 25 },  // Jabatan
-      { wch: 30 },  // Departemen
-      { wch: 14 },  // Status
-      { wch: 35 }   // Keterangan
-    ];
+    if (error) {
+      saveButton.disabled = false;
+      saveButton.innerHTML = '<span>✓</span> Simpan Presensi';
 
-    // Buat workbook
-    const wb = XLSX.utils.book_new();
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Menyimpan',
+        text: error.message
+      });
+      return;
+    }
 
-    XLSX.utils.book_append_sheet(
-      wb,
-      ws,
-      'Seluruh Presensi'
-    );
-
-    // Tanggal export untuk nama file
-    const sekarang = new Date();
-
-    const tanggalFile =
-      sekarang.getFullYear() +
-      '-' +
-      String(sekarang.getMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(sekarang.getDate()).padStart(2, '0');
-
-    // Download Excel
-    XLSX.writeFile(
-      wb,
-      `Rekap-Seluruh-Presensi-${tanggalFile}.xlsx`
-    );
+    saveButton.disabled = false;
+    saveButton.innerHTML = '<span>✓</span> Simpan Presensi';
 
     Swal.fire({
       icon: 'success',
-      title: 'Export Berhasil',
-      text: `${seluruhData.length} data presensi berhasil diexport.`
+      title: 'Berhasil',
+      text: 'Data berhasil disimpan'
     });
 
-  } catch (error) {
+    document.getElementById('nama').value = "";
+    document.getElementById('nik').value = "";
+    document.getElementById('jabatan').value = "";
+    document.getElementById('keterangan').value = "";
 
-    console.error('Export error:', error);
+    selectedDept = [];
+    document.querySelectorAll('.dept-item').forEach(el => el.classList.remove('active'));
 
-    Swal.fire({
-      icon: 'error',
-      title: 'Export Gagal',
-      text: error.message || 'Terjadi kesalahan saat mengambil data.'
+    loadData();
+  };
+
+  /* LOAD DATA HARI INI */
+  async function loadData() {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabaseClient
+      .from('presensi')
+      .select('*')
+      .gte('created_at', start.toISOString())
+      .lte('created_at', end.toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const tbody = document.getElementById('dataPresensi');
+    tbody.innerHTML = "";
+
+    data.forEach(item => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${escapeHTML(item.nama)}</td>
+          <td>${escapeHTML(item.nik)}</td>
+          <td>${escapeHTML(item.jabatan)}</td>
+          <td>${escapeHTML(formatDept(item.departemen))}</td>
+          <td>${escapeHTML(item.status)}</td>
+          <td>${item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : '-'}</td>
+        </tr>
+      `;
     });
 
-  } finally {
+    allData = data;
 
-    if (exportButton) {
-      exportButton.disabled = false;
-      exportButton.innerHTML = '<span>⬇</span> Export Semua Data';
+    renderChart(data);
+    renderNama(data);
+    renderStats(data);
+    renderWheel(data);
+  }
+
+  loadData();
+
+  function renderChart(data) {
+    const allDepartments = [
+      "Manex","Produksi","Maintenance","Sparepart","Utility",
+      "Warehouse","RMPM","QC","GA","HC","Project","HSE","RND"
+    ];
+
+    const deptHadir = {};
+    const deptIzin = {};
+    const deptAlpha = {};
+
+    allDepartments.forEach(dept => {
+      deptHadir[dept] = 0;
+      deptIzin[dept] = 0;
+      deptAlpha[dept] = 0;
+    });
+
+    data.forEach(item => {
+      const deptArray = parseDept(item.departemen);
+
+      deptArray.forEach(d => {
+        const clean = String(d).trim();
+
+        if (!allDepartments.includes(clean)) return;
+
+        if (item.status === "Hadir") {
+          deptHadir[clean]++;
+        } else if (item.status === "Izin") {
+          deptIzin[clean]++;
+        }
+      });
+    });
+
+    const now = new Date();
+    const sudahJam9 = now.getHours() >= 9;
+
+    allDepartments.forEach(dept => {
+      if (sudahJam9 && deptHadir[dept] === 0 && deptIzin[dept] === 0) {
+        deptAlpha[dept] = 1;
+      }
+    });
+
+    const ctx = document.getElementById('chartDept');
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: allDepartments,
+        datasets: [
+          {
+            label: 'Hadir',
+            data: allDepartments.map(d => deptHadir[d]),
+            backgroundColor: '#378add'
+          },
+          {
+            label: 'Izin',
+            data: allDepartments.map(d => deptIzin[d]),
+            backgroundColor: '#EF9F27'
+          },
+          {
+            label: 'Alpha',
+            data: allDepartments.map(d => deptAlpha[d]),
+            backgroundColor: '#E24B4A'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#152238',
+            padding: 12,
+            cornerRadius: 10,
+            titleFont: {
+              weight: '700'
+            },
+            displayColors: true
+          }
+        },
+        datasets: {
+          bar: {
+            borderRadius: 7,
+            borderSkipped: false,
+            maxBarThickness: 34
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: '#728096',
+              font: {
+                size: 11
+              }
+            }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1,
+              color: '#728096',
+              precision: 0
+            },
+            grid: {
+              color: 'rgba(111,128,150,.12)'
+            },
+            border: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderStats(data) {
+    const hadir = data.filter(item => item.status === 'Hadir').length;
+    const izin = data.filter(item => item.status === 'Izin').length;
+    const departments = new Set();
+
+    data.forEach(item => {
+      parseDept(item.departemen).forEach(dept => {
+        const clean = String(dept || '').trim();
+        if (clean) departments.add(clean);
+      });
+    });
+
+    document.getElementById('statTotal').textContent = data.length;
+    document.getElementById('statHadir').textContent = hadir;
+    document.getElementById('statIzin').textContent = izin;
+    document.getElementById('statDept').textContent = departments.size;
+
+    const summary = document.getElementById('attendanceSummary');
+
+    if (summary) {
+      summary.textContent = data.length
+        ? `${data.length} data presensi tercatat hari ini.`
+        : 'Belum ada presensi yang masuk hari ini.';
     }
   }
-};
+
+  function getInitials(name) {
+    return String(name || '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(word => word.charAt(0).toUpperCase())
+      .join('') || '?';
+  }
+
+  function escapeHTML(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  function renderNama(data) {
+    const container = document.getElementById('listNama');
+
+    if (data.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <span>🕘</span>
+          <strong>Belum ada yang absen</strong>
+          <div>Nama karyawan akan muncul setelah presensi disimpan.</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = data.map(item => {
+      const safeName = escapeHTML(item.nama || '-');
+
+      return `
+        <span class="name-chip" title="${safeName}">
+          <span class="name-avatar">${escapeHTML(getInitials(item.nama))}</span>
+          <span>${safeName}</span>
+        </span>
+      `;
+    }).join('');
+  }
+
+  /* ===== EXPORT SELURUH DATA PRESENSI ===== */
+  window.exportExcel = async function () {
+    const exportButton = document.getElementById('exportButton');
+
+    try {
+      if (exportButton) {
+        exportButton.disabled = true;
+        exportButton.innerHTML = '<span>⏳</span> Mengambil Data...';
+      }
+
+      Swal.fire({
+        title: 'Menyiapkan Data',
+        text: 'Sedang mengambil seluruh data presensi...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      const pageSize = 1000;
+      let from = 0;
+      let seluruhData = [];
+
+      while (true) {
+        const { data, error } = await supabaseClient
+          .from('presensi')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          break;
+        }
+
+        seluruhData = seluruhData.concat(data);
+
+        if (data.length < pageSize) {
+          break;
+        }
+
+        from += pageSize;
+      }
+
+      if (!seluruhData.length) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Data Kosong',
+          text: 'Belum ada data presensi untuk diexport.'
+        });
+        return;
+      }
+
+      const exportData = seluruhData.map((item, index) => {
+        const waktu = item.created_at
+          ? new Date(item.created_at)
+          : null;
+
+        return {
+          No: index + 1,
+          Tanggal: waktu
+            ? waktu.toLocaleDateString('id-ID')
+            : '-',
+          Waktu: waktu
+            ? waktu.toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+              })
+            : '-',
+          Nama: item.nama || '-',
+          NIK: item.nik || '-',
+          Jabatan: item.jabatan || '-',
+          Departemen: formatDept(item.departemen),
+          Status: item.status || '-',
+          Keterangan: item.keterangan || '-'
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      ws['!cols'] = [
+        { wch: 6 },
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 28 },
+        { wch: 18 },
+        { wch: 25 },
+        { wch: 30 },
+        { wch: 14 },
+        { wch: 35 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Seluruh Presensi');
+
+      const sekarang = new Date();
+
+      const tanggalFile =
+        sekarang.getFullYear() +
+        '-' +
+        String(sekarang.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(sekarang.getDate()).padStart(2, '0');
+
+      XLSX.writeFile(
+        wb,
+        `Rekap-Seluruh-Presensi-${tanggalFile}.xlsx`
+      );
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Export Berhasil',
+        text: `${seluruhData.length} data presensi berhasil diexport.`
+      });
+
+    } catch (error) {
+      console.error('Export error:', error);
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Export Gagal',
+        text: error.message || 'Terjadi kesalahan saat mengambil data.'
+      });
+
+    } finally {
+      if (exportButton) {
+        exportButton.disabled = false;
+        exportButton.innerHTML = '<span>⬇</span> Export Semua Data';
+      }
+    }
+  };
+
+  /* ===== WHEEL OF NAMES ===== */
+  function renderWheel(data) {
+    const uniqueNames = new Map();
+
+    data.forEach(item => {
+      const name = String(item.nama || '').trim();
+
+      if (!name) return;
+
+      const key = name.toLocaleLowerCase('id-ID');
+
+      if (!uniqueNames.has(key)) {
+        uniqueNames.set(key, name);
+      }
+    });
+
+    wheelNames = Array.from(uniqueNames.values());
+    wheelRotation = 0;
+
+    const info = document.getElementById('wheelInfo');
+    const spinButton = document.getElementById('wheelSpinBtn');
+    const winnerBox = document.getElementById('wheelWinner');
+    const manualList = document.getElementById('wheelManualNameList');
+
+    info.textContent = wheelNames.length
+      ? `${wheelNames.length} nama siap diundi dari daftar absen hari ini.`
+      : 'Belum ada nama yang bisa diundi hari ini.';
+
+    if (manualList) {
+      manualList.innerHTML = wheelNames
+        .map(n => `<option value="${escapeHTML(n)}"></option>`)
+        .join('');
+    }
+
+    spinButton.disabled = wheelNames.length === 0;
+    spinButton.innerHTML = '🎡 Putar Roda';
+    winnerBox.classList.remove('show');
+
+    drawWheel();
+  }
+
+  function drawWheel() {
+    const canvas = document.getElementById('wheelCanvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const size = canvas.width;
+    const center = size / 2;
+    const radius = center - 24;
+
+    ctx.clearRect(0, 0, size, size);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(center, center, radius + 9, 0, WHEEL_TAU);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(18,59,112,.22)';
+    ctx.shadowBlur = 18;
+    ctx.fill();
+    ctx.restore();
+
+    if (wheelNames.length === 0) {
+      ctx.beginPath();
+      ctx.arc(center, center, radius, 0, WHEEL_TAU);
+      ctx.fillStyle = '#e9eef5';
+      ctx.fill();
+
+      ctx.fillStyle = '#77879b';
+      ctx.font = '700 28px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Belum ada nama', center, center - 10);
+
+      ctx.font = '18px Arial';
+      ctx.fillText('Silakan isi presensi terlebih dahulu', center, center + 28);
+      return;
+    }
+
+    const arc = WHEEL_TAU / wheelNames.length;
+
+    const fontSize =
+      wheelNames.length > 30 ? 12 :
+      wheelNames.length > 20 ? 14 :
+      wheelNames.length > 12 ? 16 : 19;
+
+    const maxChars =
+      wheelNames.length > 30 ? 9 :
+      wheelNames.length > 20 ? 12 :
+      wheelNames.length > 12 ? 16 : 22;
+
+    wheelNames.forEach((name, index) => {
+      const startAngle = wheelRotation + (index * arc) - (Math.PI / 2);
+      const endAngle = startAngle + arc;
+
+      ctx.beginPath();
+      ctx.moveTo(center, center);
+      ctx.arc(center, center, radius, startAngle, endAngle);
+      ctx.closePath();
+
+      ctx.fillStyle = wheelColors[index % wheelColors.length];
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255,255,255,.92)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      const label = name.length > maxChars
+        ? `${name.slice(0, maxChars - 1)}…`
+        : name;
+
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(startAngle + (arc / 2));
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `700 ${fontSize}px Arial`;
+      ctx.shadowColor = 'rgba(0,0,0,.35)';
+      ctx.shadowBlur = 3;
+      ctx.fillText(label, radius - 34, 0);
+      ctx.restore();
+    });
+
+    ctx.beginPath();
+    ctx.arc(center, center, radius, 0, WHEEL_TAU);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 7;
+    ctx.stroke();
+
+    drawWheelCenter(ctx, center);
+  }
+
+  function drawWheelCenter(ctx, center) {
+    const gradient = ctx.createRadialGradient(
+      center - 18,
+      center - 20,
+      5,
+      center,
+      center,
+      74
+    );
+
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(1, '#dceaff');
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(center, center, 72, 0, WHEEL_TAU);
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = 'rgba(0,0,0,.25)';
+    ctx.shadowBlur = 12;
+    ctx.fill();
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 7;
+    ctx.stroke();
+
+    ctx.fillStyle = '#0759b8';
+    ctx.font = '900 29px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('DOR', center, center - 7);
+
+    ctx.font = '700 13px Arial';
+    ctx.fillStyle = '#5a6f87';
+    ctx.fillText('SPIN', center, center + 22);
+
+    ctx.restore();
+  }
+
+  /* Buka/tutup panel "atur hasil spin" dengan proteksi PIN */
+  function toggleWheelManualPanel() {
+    const panel = document.getElementById('wheelManualPanel');
+
+    if (!panel) return;
+
+    if (panel.classList.contains('show')) {
+      panel.classList.remove('show');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Masukkan PIN Admin',
+      input: 'password',
+      inputPlaceholder: 'PIN',
+      inputAttributes: {
+        autocapitalize: 'off',
+        autocorrect: 'off'
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Buka',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#6f42c1',
+      preConfirm: (value) => {
+        if (value !== WHEEL_ADMIN_PIN) {
+          Swal.showValidationMessage('PIN salah, coba lagi');
+          return false;
+        }
+
+        return true;
+      }
+    }).then(result => {
+      if (result.isConfirmed) {
+        panel.classList.add('show');
+      }
+    });
+  }
+
+  function secureRandomIndex(length) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      const randomValue = new Uint32Array(1);
+      window.crypto.getRandomValues(randomValue);
+      return randomValue[0] % length;
+    }
+
+    return Math.floor(Math.random() * length);
+  }
+
+  function spinWheel() {
+    if (wheelSpinning) return;
+
+    if (!wheelNames.length) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Belum Ada Peserta',
+        text: 'Belum ada nama dari daftar absen hari ini.'
+      });
+      return;
+    }
+
+    const spinButton = document.getElementById('wheelSpinBtn');
+    const winnerBox = document.getElementById('wheelWinner');
+    const winnerNameElement = document.getElementById('wheelWinnerName');
+    const manualInput = document.getElementById('wheelManualName');
+
+    const manualValue = manualInput
+      ? manualInput.value.trim()
+      : '';
+
+    let winnerIndex;
+    let isManualPick = false;
+
+    if (manualValue) {
+      const matchIndex = wheelNames.findIndex(
+        n => n.toLocaleLowerCase('id-ID') === manualValue.toLocaleLowerCase('id-ID')
+      );
+
+      if (matchIndex === -1) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Nama Tidak Ditemukan',
+          text: `"${manualValue}" tidak ada di daftar peserta hari ini. Pilih dari saran atau kosongkan kolom untuk acak.`
+        });
+        return;
+      }
+
+      winnerIndex = matchIndex;
+      isManualPick = true;
+
+    } else {
+      winnerIndex = secureRandomIndex(wheelNames.length);
+    }
+
+    wheelSpinning = true;
+    spinButton.disabled = true;
+    spinButton.innerHTML = '⏳ Sedang Memutar...';
+    winnerBox.classList.remove('show');
+
+    const arc = WHEEL_TAU / wheelNames.length;
+
+    const currentNormalized =
+      ((wheelRotation % WHEEL_TAU) + WHEEL_TAU) % WHEEL_TAU;
+
+    const desiredNormalized =
+      ((-(winnerIndex + 0.5) * arc) % WHEEL_TAU + WHEEL_TAU) % WHEEL_TAU;
+
+    const extraTurns = 7 + secureRandomIndex(4);
+
+    const angularDistance =
+      ((desiredNormalized - currentNormalized + WHEEL_TAU) % WHEEL_TAU) +
+      (extraTurns * WHEEL_TAU);
+
+    const startRotation = wheelRotation;
+    const endRotation = startRotation + angularDistance;
+    const duration = 5200;
+    const startTime = performance.now();
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 4);
+
+      wheelRotation =
+        startRotation +
+        ((endRotation - startRotation) * eased);
+
+      drawWheel();
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+        return;
+      }
+
+      wheelRotation = endRotation;
+      drawWheel();
+
+      wheelSpinning = false;
+
+      const winnerName = wheelNames[winnerIndex];
+
+      winnerNameElement.textContent = winnerName;
+      winnerBox.classList.add('show');
+
+      spinButton.disabled = false;
+      spinButton.innerHTML = '🔄 Putar Lagi';
+
+      if (isManualPick && manualInput) {
+        manualInput.value = '';
+      }
+
+      playWinnerSound();
+      launchConfetti();
+
+      Swal.fire({
+        icon: 'success',
+        title: '🎉 Nama Terpilih',
+        text: winnerName,
+        confirmButtonText: 'Mantap!',
+        confirmButtonColor: '#007bff'
+      });
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function playWinnerSound() {
+    try {
+      const AudioContextClass =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+      if (!AudioContextClass) return;
+
+      const audioContext = new AudioContextClass();
+      const notes = [523.25, 659.25, 783.99];
+
+      notes.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        const startAt =
+          audioContext.currentTime +
+          (index * 0.12);
+
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency;
+
+        gain.gain.setValueAtTime(0.0001, startAt);
+        gain.gain.exponentialRampToValueAtTime(0.18, startAt + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.35);
+
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+
+        oscillator.start(startAt);
+        oscillator.stop(startAt + 0.38);
+      });
+
+    } catch (error) {
+      console.warn('Audio tidak dapat diputar:', error);
+    }
+  }
+
+  function launchConfetti() {
+    const total = 70;
+
+    for (let i = 0; i < total; i++) {
+      const piece = document.createElement('div');
+
+      piece.className = 'confetti-piece';
+      piece.style.left = `${Math.random() * 100}vw`;
+      piece.style.background = wheelColors[i % wheelColors.length];
+      piece.style.animationDuration = `${2.7 + Math.random() * 1.8}s`;
+      piece.style.animationDelay = `${Math.random() * 0.45}s`;
+      piece.style.setProperty('--drift', `${-140 + Math.random() * 280}px`);
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+
+      document.body.appendChild(piece);
+
+      setTimeout(() => piece.remove(), 5200);
+    }
+  }
+
+  function parseDept(dept) {
+    if (!dept) return [];
+
+    if (Array.isArray(dept)) {
+      return dept;
+    }
+
+    if (typeof dept === "string") {
+      try {
+        const parsed = JSON.parse(dept);
+
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {}
+
+      return dept
+        .split(",")
+        .map(x => x.replace(/[\[\]"]/g, "").trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  }
+</script>
+
+</body>
+</html>
